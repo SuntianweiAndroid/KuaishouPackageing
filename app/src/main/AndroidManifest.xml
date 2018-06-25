@@ -1,17 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.kuaishoupackaging">
     <!--开机启动-->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <!--设备电源锁-->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"></uses-permission>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"></uses-permission>
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" /> <!-- 向SDCard写入数据权限 -->
-
+    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
     <application
         android:name=".base.MyAplicatin"
         android:allowBackup="true"
@@ -19,7 +20,8 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme"
+        tools:ignore="GoogleAppIndexingWarning">
         <activity
             android:name=".MainActivity"
             android:screenOrientation="landscape">
@@ -29,15 +31,16 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".DbShowAct"></activity>
-        <activity android:name=".SetingVolumeAct">
-
+        <activity
+            android:name=".DbShowAct"
+            android:screenOrientation="landscape" />
+        <activity
+            android:name=".VolumeSetingAct"
+            android:screenOrientation="landscape">
         </activity>
-        <activity android:name=".SettingAct">
-
-        </activity>
-        <activity android:name=".tcpip.Client">
-
+        <activity
+            android:name=".SettingAct"
+            android:screenOrientation="landscape">
         </activity>
 
         <receiver android:name=".base.BootBroadcastReceiver">

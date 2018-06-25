@@ -2,6 +2,7 @@ package com.kuaishoulibrary.utils;
 
 import android.content.Context;
 import android.os.Build;
+import android.os.Handler;
 import android.support.annotation.RequiresApi;
 import android.widget.Toast;
 
@@ -24,19 +25,24 @@ public class CheckOutVolumeUtils {
         preferencesUitl = SharedPreferencesUitl.getInstance(context, "decoeBar");
     }
 
-   private  List<Datas> GetCriterionDatas() {
+    private List<Datas> GetCriterionDatas() {
         List<Datas> CriterionList = new ArrayList<>();
         /* 将标准体的实际长宽高写入 */
-        CriterionList.add(new Datas(15, 15, 15));    //第一个标准长、宽、高，以此类推
-        CriterionList.add(new Datas(20, 20, 20));
-        CriterionList.add(new Datas(30, 30, 30));
-        CriterionList.add(new Datas(40, 40, 40));
-        CriterionList.add(new Datas(50, 50, 50));
+        CriterionList.add(new Datas(25, 25, 10.2));    //第一个标准长、宽、高，以此类推
+        CriterionList.add(new Datas(25, 25, 21.2));
+        CriterionList.add(new Datas(25, 25, 31.8));
+        CriterionList.add(new Datas(25, 25, 42.2));
+        CriterionList.add(new Datas(25, 25, 52.5));
+//        CriterionList.add(new Datas(22.8, 15.8, 15.5));    //第一个标准长、宽、高，以此类推
+//        CriterionList.add(new Datas(15.5, 15.3, 23));
+//        CriterionList.add(new Datas(37.8, 28.3, 30.2));
+//        CriterionList.add(new Datas(30.5, 28, 41.8));
+//        CriterionList.add(new Datas(30.5, 28, 53.8));
         return CriterionList;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-    public void nihe(List<Datas> Testdata) {
+    public void nihe(List<Datas> Testdata, Handler handler) {
         /* 调用函数拟合， 并将拟合系数保存至savedata*/
         H_measure = getdata(Testdata, "H");
         resultDatas.addAll(calc_pfit(H_measure, getradio(getdata(GetCriterionDatas(), "L"), getdata(Testdata, "L"))));
@@ -44,14 +50,26 @@ public class CheckOutVolumeUtils {
         resultDatas.addAll(calc_pfit(H_measure, getdata(GetCriterionDatas(), "H")));
 
         if (resultDatas.size() != 0) {
-            preferencesUitl.saveArray(resultDatas);  /* 保存拟合数据 */
+//            preferencesUitl.saveArray(resultDatas);  /* 保存拟合数据 */
+//            SharedPreferencesUitl.saveArray(context, resultDatas);
+            if (FileUtils.saveVolumeFile(resultDatas)) {
+                handler.sendMessage(handler.obtainMessage(3));
+                resultDatas.clear();
+                H_measure.clear();
+            } else {
+                handler.sendMessage(handler.obtainMessage(4));
+                resultDatas.clear();
+                H_measure.clear();
+            }
             Toast.makeText(context, "拟合成功！", Toast.LENGTH_SHORT).show();
+        } else {
+            handler.sendMessage(handler.obtainMessage(5));
         }
     }
 
     /* 拟合函数 */
 
-    private  ArrayList<String> calc_pfit(ArrayList<String> x_axis, ArrayList<String> y_axis) {
+    private ArrayList<String> calc_pfit(ArrayList<String> x_axis, ArrayList<String> y_axis) {
         n = n_deg;
         double a[] = new double[n + 1];
         ArrayList<String> coeff = new ArrayList<String>();
@@ -121,7 +139,7 @@ public class CheckOutVolumeUtils {
 
     /* 计算实际长宽与高的像素值的比例*/
 
-    private  ArrayList<String> getradio(ArrayList<String> actualist, ArrayList<String> testlist) {
+    private ArrayList<String> getradio(ArrayList<String> actualist, ArrayList<String> testlist) {
         ArrayList<String> ratio = new ArrayList<>();
         if (actualist.size() != testlist.size()) {
 //            Toast.makeText(getBaseContext(), "发生错误！请测量更多的标准体！", Toast.LENGTH_SHORT).show();
@@ -137,7 +155,7 @@ public class CheckOutVolumeUtils {
     /* 获取Datas类里的长宽高 */
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-    private  ArrayList<String> getdata(List<Datas> data, String index) {
+    private ArrayList<String> getdata(List<Datas> data, String index) {
         ArrayList<String> list = new ArrayList<>();
         if (data.size() == 0) {
 //            Toast.makeText(getBaseContext(), "未发现测量数据！", Toast.LENGTH_SHORT).show();

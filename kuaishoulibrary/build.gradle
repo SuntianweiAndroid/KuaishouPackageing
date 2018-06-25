@@ -1,10 +1,10 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 26
+    compileSdkVersion 27
     defaultConfig {
         minSdkVersion 15
-        targetSdkVersion 26
+        targetSdkVersion 27
         versionCode 1
         versionName "1.0"
 
@@ -43,11 +43,12 @@ task buildJar(type: Jar, dependsOn: ['build']) {
 // gradlew buildJar
 dependencies {
     api fileTree(include: ['*.jar', '*.aar'], dir: 'libs')
-    implementation 'com.android.support:appcompat-v7:26.1.0'
+    implementation 'com.android.support:appcompat-v7:27.1.1'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
     //    compile(name: 'openCVLibrary330-release', ext: 'aar')
     //    evenbus 传递数
-//    implementation 'org.greenrobot:eventbus:3.0.0'
+    //    implementation 'org.greenrobot:eventbus:3.0.0'
+    implementation files('libs/device.jar')
 }

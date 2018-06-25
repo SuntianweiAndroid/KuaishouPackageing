@@ -200,12 +200,11 @@ public class SharedPreferencesUitl {
     }
 
     public void saveArray(List<String> list) {
-        SharedPreferences.Editor mEdit1 = sharedPreferences.edit();
-        mEdit1.putInt("Status_size", list.size());
+        editor.putInt("Status_size", list.size());
 
         for (int i = 0; i < list.size(); i++) {
-            mEdit1.remove("Status_" + i);
-            mEdit1.putString("Status_" + i, list.get(i));
+            editor.remove("Status_" + i);
+            editor.putString("Status_" + i, list.get(i));
         }
     }
 
@@ -218,5 +217,27 @@ public class SharedPreferencesUitl {
 
         }
         return list;
+    }
+    public static boolean saveArray(Context context, List<String> list) {
+        SharedPreferences sp = context.getSharedPreferences("ingoreList", context.MODE_PRIVATE);
+        SharedPreferences.Editor mEdit1= sp.edit();
+        mEdit1.putInt("Status_size",list.size());
+
+        for(int i=0;i<list.size();i++) {
+            mEdit1.remove("Status_" + i);
+            mEdit1.putString("Status_" + i, list.get(i));
+        }
+        return mEdit1.commit();
+    }
+
+    public static void loadArray(Context context, List<String> list) {
+
+        SharedPreferences mSharedPreference1 = context.getSharedPreferences("ingoreList", context.MODE_PRIVATE);
+        list.clear();
+        int size = mSharedPreference1.getInt("Status_size", 0);
+        for(int i=0;i<size;i++) {
+            list.add(mSharedPreference1.getString("Status_" + i, null));
+
+        }
     }
 }

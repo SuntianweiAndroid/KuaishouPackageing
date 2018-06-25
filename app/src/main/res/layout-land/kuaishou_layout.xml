@@ -67,6 +67,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="right"
                 android:text="条码设置"
+                android:visibility="gone"
                 android:textColor="#e60a0a" />
 
         </FrameLayout>

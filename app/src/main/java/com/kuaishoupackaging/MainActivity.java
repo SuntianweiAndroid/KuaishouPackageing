@@ -1,13 +1,16 @@
 package com.kuaishoupackaging;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.hardware.Camera;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
-import android.serialport.DeviceControl;
+import android.support.v4.app.ActivityCompat;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.SurfaceView;
@@ -34,15 +37,17 @@ import com.kuaishoupackaging.base.BaseAct;
 import com.kuaishoupackaging.been.OperBody;
 import com.kuaishoupackaging.been.ScanDatas;
 import com.kuaishoupackaging.db.KuaiShouDatas;
-import com.kuaishoupackaging.tcpip.MyLog;
-import com.kuaishoupackaging.tcpip.SocThread;
+import com.kuaishoupackaging.tcpip.TcpIpUtils;
 import com.kuaishoupackaging.util.DBUitl;
+import com.kuaishoupackaging.util.DeviceControl;
 import com.kuaishoupackaging.util.SettingUtils;
 import com.kuaishoupackaging.util.SharedPreferencesUitl;
-import com.kuaishoupackaging.util.TcpUtils;
 import com.kuaishoupackaging.view.CustomToolBar;
 import com.sc100.HuoniManage;
 import com.sc100.Huoniinterface.HuoniScan;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -53,6 +58,8 @@ import java.util.Date;
 import java.util.Queue;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class MainActivity extends BaseAct implements WeightInterface.DisplayWeightDatasListener, VolumeInterface.DisplayVolumeListener, View.OnClickListener, HuoniScan.DisplayBarcodeDataListener, CustomToolBar.BtnClickListener, HuoniScan.HuoniscanListener {
 
@@ -104,10 +111,10 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
 
     private Queue<String> BarCodeQueue = new ArrayDeque<>();//条码队列
     private LinearLayout mVolueLayout;
-    private SocThread socketThread;//socket通讯
-    private Handler mhandler;
-    private Handler mhandlerSend;
+    private TcpIpUtils tcpIpUtils;//socket通讯
     private double[] volumeDatas;
+    private Timer timer = null;
+    private String imei;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -138,7 +145,6 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
         mFloatId = findViewById(R.id.float_id);
         mBtnCodeSetting = findViewById(R.id.btn_code_setting);
         mBtnCodeSetting.setOnClickListener(this);
-
         try {
             deviceControl = new DeviceControl(DeviceControl.PowerType.MAIN);
             deviceControl.MainPowerOn(93);//体积激光
@@ -164,45 +170,11 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
 
         //初始化提及测量
         volumeInterface = VolumeManage.getVolumeIntance();
-        volumeInterface.initVolumeCamera(MainActivity.this, mSurfaceview);
-        volumeInterface.setDisplayVolumeListener(this);
 
 
         //初始化称重
         weightInterface = WeightManage.getKuaishouIntance();
         weightInterface.setWeightStatas(this);
-        mhandler = new Handler() {
-            @Override
-            public void handleMessage(Message msg) {
-                try {
-                    if (msg.obj != null) {
-                        String s = msg.obj.toString();
-                        if (s.trim().length() > 0) {
-                            mTvShowmsg.setText("Server:" + s);
-                        } else {
-                        }
-                    }
-                } catch (Exception ee) {
-                    ee.printStackTrace();
-                }
-            }
-        };
-        mhandlerSend = new Handler() {
-            @Override
-            public void handleMessage(Message msg) {
-                try {
-                    String s = msg.obj.toString();
-                    if (msg.what == 1) {
-                        mTvShowmsg.setText("\n ME: " + s + "      发送成功");
-                    } else {
-                        mTvShowmsg.setText("\n ME: " + s + "     发送失败");
-                    }
-                } catch (Exception ee) {
-                    ee.printStackTrace();
-                }
-            }
-        };
-
     }
 
     private long startTime = 0;
@@ -210,6 +182,20 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
     @Override
     protected void onResume() {
         startSocket();
+        TelephonyManager telephonyManager = (TelephonyManager) this.getSystemService(this.TELEPHONY_SERVICE);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        imei = telephonyManager.getDeviceId();
+        volumeInterface.initVolumeCamera(MainActivity.this, mSurfaceview);
+        volumeInterface.setDisplayVolumeListener(this);
         weightInterface.initWeight();
         customToolBar.setCameraState("相机：" + preferencesUitl.read("hsmDecoder", ""));
         barcode = "";
@@ -217,8 +203,8 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
         //查询缓存的快件条码
         BarCodeQueue = preferencesUitl.readQueue("queue");
         Object[] oo = BarCodeQueue.toArray();
-        for (int i = 0; i < oo.length; i++) {
-            Log.i("BarCodeQueue", "onResume: " + oo[i]);
+        for (Object anOo : oo) {
+            Log.i("BarCodeQueue", "onResume: " + anOo);
         }
         starterTimer();//检测所有状态
         for (int i = 0; i < 48; i++) {
@@ -239,18 +225,21 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
                 }
             }
         }
+        hsmDecoder.enableSymbology(Symbology.QR);
+        hsmDecoder.enableSymbology(Symbology.CODE128);
+        hsmDecoder.enableSymbology(Symbology.CODE39);
         hsmDecoder.enableSound(false);
         cameraManager.reopenCamera();
         startTime = SystemClock.currentThreadTimeMillis();
         camera1 = cameraManager.getCamera();
         parameters1 = camera1.getParameters();
         parameters1.setExposureCompensation(-3);
-//        parameters1.setAutoWhiteBalanceLock(true);
-//        parameters1.setColorEffect(Camera.Parameters.EFFECT_MONO);
+        parameters1.setAutoWhiteBalanceLock(true);
+        parameters1.setColorEffect(Camera.Parameters.EFFECT_MONO);
         parameters1.setPreviewSize(1920, 1080);
         camera1.setParameters(parameters1);
-//        setCameraParams();
-//        startTimer();
+        setCameraParams();
+        startTimer();
         super.onResume();
 
     }
@@ -292,15 +281,14 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
 
     }
 
-    private Timer timer = null;
-
     private void startTimer() {
         timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
                 parameters1.setAutoExposureLock(true);
-                camera1.setParameters(parameters1);
+                if (camera1 != null)
+                    camera1.setParameters(parameters1);
             }
         }, 4000);
     }
@@ -314,11 +302,12 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
             volumeInterface.volumePreviewPicture(false);
             return true;
         }
-        if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {//调整扫码焦距
+        if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN || keyCode == KeyEvent.KEYCODE_VOLUME_UP) {//调整扫码焦距
+
             final Gson gson = new GsonBuilder().serializeNulls().create();
             String postData = gson.toJson(new OperBody("1254783678", "456464646", 78.00, 12.00, 45.50, 23.23, 45.23, SystemClock.currentThreadTimeMillis()));
             String rusultData = gson.toJson(new ScanDatas(1, postData));
-            socketThread.Send(rusultData);
+            tcpIpUtils.Send(rusultData);
             if (a > 10) {
                 a = 0;
             }
@@ -368,35 +357,33 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
     @Override
     protected void onPause() {
         super.onPause();
-        if (timer != null) {
-            timer.cancel();
-        }
-        stopSocket();
+        weightInterface.releaseWeightDev();
         volumeInterface.releaseVolumeCamera();
-        VolumeManage.disVolumeInterface();
     }
 
     @Override
     protected void onStop() {
         super.onStop();
 
-
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        huoniScan.release();
-        weightInterface.releaseWeightDev();
         try {
             deviceControl.MainPowerOff(93);
             deviceControl.MainPowerOff(98);
         } catch (IOException e) {
             e.printStackTrace();
         }
+        huoniScan.release();
+
+        if (timer != null) {
+            timer.cancel();
+        }
+        stopSocket();
     }
 
-    private String volume = "";
     @SuppressLint("HandlerLeak")
     private Handler handler = new Handler() {
 
@@ -407,36 +394,46 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
             switch (msg.what) {
                 case 1: //体积测量返回结果
                     volumeDatas = (double[]) msg.obj;
-                    if (volumeDatas[3] == 1) {
-                        volumeState = false;
-//                        mVolueLayout.setBackgroundColor(getResources().getColor(R.color.red));
-//                        mTvShowmsg.setText("您的摆放不正确");
-                    } else if (volumeDatas[3] == 2) {
-//                        volumeState = false;
-//                        mTvShowmsg.setText("线缺失");
-                    } else if (volumeDatas[3] == 3) {
-//                        volumeState = false;
-//                        mTvShowmsg.setText("请往中心位置摆放");
-                    } else if (volumeDatas[3] == 4) {
-//                        volumeState = false;
-//                        mTvShowmsg.setText("请往中心位置摆放");
-                    } else if (volumeDatas[3] == 0) {
-                        volumeState = true;
-                        mVolueLayout.setBackgroundColor(getResources().getColor(R.color.green));
-                        volume = "长" + volumeDatas[0] + "宽" + volumeDatas[1] + "高" + volumeDatas[2];
-                        mVolume.setText(volume);
+                    if (volumeDatas[3] == 0) {
                         volumeInterface.stopVolume();
+                        mVolume.setText("长" + df.format(volumeDatas[0]) + "宽" + df.format(volumeDatas[1]) + "高" + df.format(volumeDatas[2]));
+                        mVolueLayout.setBackgroundColor(getResources().getColor(R.color.green));
+                        volumeState = true;
+                    } else if (volumeDatas[3] == 1) {
+                        volumeState = false;
                     }
                     break;
                 case 2://显示体积测量的图片
                     mImage.setImageBitmap((Bitmap) msg.obj);
                     break;
+                case 3://Tcp接收服务端返回的结果
+                    String reuslt = String.valueOf(msg.obj);
+                    //解析
+                    try {
+                        JSONObject jsonObject = new JSONObject(reuslt);
+                        int StateCode = jsonObject.getInt("code");
+                        String messageResult = jsonObject.getString("message");
+                        if (StateCode == 200) {
+                            PlaySound.play(PlaySound.PASS_SCAN, PlaySound.NO_CYCLE);
+                            mTvShowmsg.setTextColor(getResources().getColor(R.color.green));
+                            mTvShowmsg.setText("PASS\n请扫面下一件物品");
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                    break;
+                case 4://tcp连接服务端错误
+
+                    break;
+                case 5://当前tcp 服务端的 ip地址
+
+                    break;
                 case 10:// 条码/重量/体积 三合一 测量完毕上传数据
-//                    dbUitl.insertDtata(new KuaiShouDatas((String) msg.obj, weightResult + "kg", volume, testTime(System.currentTimeMillis())));
+                    dbUitl.insertDtata(new KuaiShouDatas((String) msg.obj, weightResult + "kg", "长" + volumeDatas[0] + "宽" + volumeDatas[1] + "高" + volumeDatas[2], testTime(System.currentTimeMillis())));
                     final Gson gson = new GsonBuilder().serializeNulls().create();
-                    String postData = gson.toJson(new OperBody(barcode, "456464646", Double.valueOf(weightResult), volumeDatas[0], volumeDatas[1], volumeDatas[3], 45.23, SystemClock.currentThreadTimeMillis()));
+                    String postData = gson.toJson(new OperBody(barcode, imei, Double.valueOf(weightResult), Double.parseDouble(df.format(volumeDatas[0])), Double.parseDouble(df.format(volumeDatas[1])), Double.parseDouble(df.format(volumeDatas[2])), Double.parseDouble(df.format(Double.parseDouble(df.format(volumeDatas[0])) * Double.parseDouble(df.format(volumeDatas[1])) * Double.parseDouble(df.format(volumeDatas[2])))), SystemClock.currentThreadTimeMillis()));
                     String rusultData = gson.toJson(new ScanDatas(1, postData));
-                    socketThread.Send(rusultData);
+                    tcpIpUtils.Send(rusultData);
                     mTvShowmsg.setTextColor(getResources().getColor(R.color.green));
                     mTvShowmsg.setText("PASS\n请扫面下一件物品");
                     dbCount++;
@@ -446,6 +443,7 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
                     mLayoutWeight.setBackgroundColor(getResources().getColor(R.color.red));
                     mTvShowmsg.setTextColor(getResources().getColor(R.color.white));
                     mTvShowmsg.setText((String) msg.obj);
+                    volumeState = false;
                     mVolume.setText("空");
 //                    mCode.setText("空");
 //                    mLayoutBarcode.setBackgroundColor(getResources().getColor(R.color.red));
@@ -460,10 +458,9 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
     };
 
     public String testTime(long l) {
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS");
+        @SuppressLint("SimpleDateFormat") SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS");
         Date curDate = new Date(l);//获取当前时间
-        String Times = formatter.format(curDate);
-        return Times;
+        return formatter.format(curDate);
     }
 
     /**
@@ -481,15 +478,11 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
                     BarCodeQueue.offer(barcode);
                     if (BarCodeQueue.size() > 2) {
                         Object[] s = BarCodeQueue.toArray();
-                        for (int i = 0; i < s.length; i++) {
-                            Log.i("BarCodeQueue", "timer: " + s[i]);
+                        for (Object value : s) {
+                            Log.i("BarCodeQueue", "timer: " + value);
                         }
                         BarCodeQueue.poll();
                     }
-                    final Gson gson = new GsonBuilder().serializeNulls().create();
-                    String postData = gson.toJson(new OperBody(barcode, "456464646", 78.00, 12.00, 45.50, 23.23, 45.23, SystemClock.currentThreadTimeMillis()));
-                    String rusultData = gson.toJson(new ScanDatas(1, postData));
-
                     preferencesUitl.writeQueue("queue", BarCodeQueue);
                     PlaySound.play(PlaySound.PASS_SCAN, PlaySound.NO_CYCLE);
                     handler.sendMessage(handler.obtainMessage(10, barcode));
@@ -503,6 +496,7 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
     @Override
     public void WeightStatas(final int i, final double v) {
         runOnUiThread(new Runnable() {
+            @SuppressLint("SetTextI18n")
             @Override
             public void run() {
                 switch (i) {
@@ -521,15 +515,19 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
                         break;
                     case 2:
                         customToolBar.setWeightState("电子秤：已连接");
-                        volumeInterface.volumePreviewPicture(false);
                         mWeight.setText(df.format(v));
                         if (v == 0) {
-//                            if (b==1){
-//                                volumeInterface.volumePreviewPicture(false);
-//                            }
+                            volumeInterface.stopVolume();
                             weightState = false;
-                            handler.sendMessage(handler.obtainMessage(11, "保证条码在预览框内"));
+                            volumeState = false;
+                        } else {
+                            volumeState = false;
+                            Log.i("kankan", "run: " + volumeInterface.volumeIsRunning());
+                            if (!volumeInterface.volumeIsRunning()) {
+                                volumeInterface.volumePreviewPicture(false);
+                            }
                         }
+                        handler.sendMessage(handler.obtainMessage(11, "保证条码在预览框内"));
                         break;
                     case 3:
                         handler.sendMessage(handler.obtainMessage(11, "保证条码在预览框内"));
@@ -557,22 +555,35 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
 //        mCode.setTextSize(20);
 //        handler.sendMessage(handler.obtainMessage(12, result.toString()));
         //***********************
-        String decoderBar = s;
-        count++;
 //        mTvShowmsg.setText(count+"次");
-//        hsmDecoder.enableSound(true);
-        handler.sendMessage(handler.obtainMessage(12, decoderBar));//将解到码实时更新界面
-        if (BarCodeQueue.contains(decoderBar)) {
-            if (!decoderBar.equals(barcode)) {
-                PlaySound.play(PlaySound.REPETITION, PlaySound.NO_CYCLE);
-                handler.sendMessage(handler.obtainMessage(11, "重复扫描\n请扫面下一件物品"));
-                Log.i("db", "播放声音");
+
+        if (isJingdDongCodes("76196584344-1-1-23")) {//京东判断条码
+
+            handler.sendMessage(handler.obtainMessage(12, s));//将解到码实时更新界面
+
+            if (BarCodeQueue.contains(s)) {
+                if (!s.equals(barcode)) {
+                    PlaySound.play(PlaySound.REPETITION, PlaySound.NO_CYCLE);
+                    handler.sendMessage(handler.obtainMessage(11, "重复扫描\n请扫面下一件物品"));
+                    Log.i("db", "播放声音");
+                }
             }
+            barcode = s;
         }
-        barcode = decoderBar;
     }
 
-    private int count = 0;
+    /**
+     * 判断是否符合京東条码格式
+     */
+    public boolean isJingdDongCodes(String s) {
+
+        Pattern pattern = Pattern.compile("^([A-Za-z0-9]{8,})(-(?=[0-9]{1,5}-)|N(?=[0-9]{1,5}S))([1-9]{1}[0-9]{0,4})(-(?=[0-9]{1,5}-)|S(?=[0-9]{1,5}H))([1-9]{1}[0-9]{0,4})([-|H][A-Za-z0-9]*)$");
+        Matcher matcher = pattern.matcher(s);
+        //正则改为2个字符|null+16位数字（8位日期+8位序列）
+        return matcher.matches();
+
+    }
+
 
     @Override
     public void onClick(View v) {
@@ -609,14 +620,13 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
     }
 
     public void startSocket() {
-        socketThread = new SocThread(mhandler, mhandlerSend, MainActivity.this);
-        socketThread.start();
+        tcpIpUtils = new TcpIpUtils(handler, MainActivity.this);
+        tcpIpUtils.startss();
+        tcpIpUtils.starterTimer();
     }
 
 
     private void stopSocket() {
-        socketThread.isRun = false;
-        socketThread.close();
-        socketThread = null;
+        tcpIpUtils.close();
     }
 }

@@ -58,6 +58,7 @@ public interface VolumeInterface {
      */
     void volumeCheck();
 
+    boolean volumeIsRunning();
     /**
      * 回调体积结果
      *

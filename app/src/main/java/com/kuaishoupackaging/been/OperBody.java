@@ -6,17 +6,17 @@ public class OperBody {
     private double weight;
     private double length;
     private double width;
-    private double hight;
+    private double high;
     private double volume;
     private long scannerTime;
 
-    public OperBody(String barCode, String machineCode, double weight, double length, double width, double hight, double volume, long scannerTime) {
+    public OperBody(String barCode, String machineCode, double weight, double length, double width, double high, double volume, long scannerTime) {
         this.barCode = barCode;
         this.machineCode = machineCode;
         this.weight = weight;
         this.length = length;
         this.width = width;
-        this.hight = hight;
+        this.high = high;
         this.volume = volume;
         this.scannerTime = scannerTime;
     }
@@ -61,12 +61,12 @@ public class OperBody {
         this.width = width;
     }
 
-    public double getHight() {
-        return hight;
+    public double gethigh() {
+        return high;
     }
 
-    public void setHight(double hight) {
-        this.hight = hight;
+    public void sethigh(double high) {
+        this.high = high;
     }
 
     public double getVolume() {
@@ -93,7 +93,7 @@ public class OperBody {
                 ", weight=" + weight +
                 ", length=" + length +
                 ", width=" + width +
-                ", hight=" + hight +
+                ", high=" + high +
                 ", volume=" + volume +
                 ", scannerTime=" + scannerTime +
                 '}';

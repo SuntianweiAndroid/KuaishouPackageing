@@ -83,10 +83,10 @@ public class WeightRealize implements WeightInterface {
                                 if (weight != 0) {
                                     queue.offer(weight);
                                     Log.i("duilie", "mainEvent: 开始 ");
-                                    if (queue.size() > 4) {
+                                    if (queue.size() > 3) {
                                         Object[] s = queue.toArray();
                                         for (int j = 1; j < s.length; j++) {
-                                            if ((double) s[s.length - 1] - (double) s[s.length - j - 1] < 0.03) {
+                                            if ((double) s[s.length - 1] - (double) s[s.length - j - 1] < 0.02) {
                                                 System.out.print((double) s[j] + "dafdafasdfas");
                                                 displayWeightDatasListener.WeightStatas(1, (double) s[s.length - 1]);
                                                 queue.poll();

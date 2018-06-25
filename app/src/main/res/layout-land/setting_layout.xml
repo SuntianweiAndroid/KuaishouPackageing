@@ -5,6 +5,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:ignore="MissingDefaultResource">
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -28,8 +29,8 @@
                     android:layout_marginLeft="30dp"
                     android:layout_marginTop="20dp"
                     android:drawableLeft="@drawable/service_seting"
-                    android:text="SCOKET"
-                    android:textSize="30sp" />
+                    android:text="服务通讯"
+                    android:textSize="50sp" />
             </LinearLayout>
 
             <View
@@ -43,7 +44,10 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_gravity="center"
                 android:layout_marginLeft="20dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginRight="20dp"
                 android:orientation="vertical">
 
                 <TextView
@@ -51,22 +55,22 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="服务端IP"
-                    android:textSize="20sp" />
+                    android:textSize="30sp" />
 
                 <EditText
                     android:id="@+id/editText1_ip"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:ems="10"
-                    android:hint="192.168.1.155">
-                </EditText>
+                    android:hint="192.168.1.155"
+                    android:textSize="30sp" />
 
                 <TextView
-                    android:id="@+id/textView2_duankou"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
                     android:text="端口号"
-                    android:textSize="20sp" />
+                    android:textSize="30sp" />
 
                 <EditText
                     android:id="@+id/editText2_duankou"
@@ -74,13 +78,34 @@
                     android:layout_height="wrap_content"
                     android:ems="10"
                     android:hint="8888"
-                    android:inputType="number" />
+                    android:inputType="number"
+                    android:textSize="30sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="心跳时间"
+                    android:textSize="30sp" />
+
+                <EditText
+                    android:id="@+id/editText_hert"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ems="10"
+                    android:hint="1"
+                    android:inputType="number"
+                    android:textSize="30sp" />
 
                 <Button
                     android:id="@+id/button1_save"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="保存" />
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/btn_style"
+                    android:text="保存"
+                    android:textSize="40sp" />
+
 
             </LinearLayout>
         </LinearLayout>
@@ -104,7 +129,7 @@
                     android:layout_marginTop="20dp"
                     android:drawableLeft="@drawable/volume_seting"
                     android:text="体积校正"
-                    android:textSize="30sp" />
+                    android:textSize="50sp" />
 
             </LinearLayout>
 
@@ -123,18 +148,24 @@
 
                 <Button
                     android:id="@+id/btn_volume_setting"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="体积校正" />
+                    android:layout_margin="20dp"
+                    android:layout_marginTop="70dp"
+                    android:layout_marginBottom="70dp"
+                    android:background="@drawable/btn_style"
+                    android:text="体积校正"
+                    android:textSize="40sp" />
 
             </LinearLayout>
+
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1.5dip"
                 android:layout_margin="20dp"
-                android:layout_marginTop="20dp"
                 android:background="#181717"
                 android:layerType="software" />
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -144,12 +175,19 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="30dp"
-                    android:layout_marginTop="20dp"
-                    android:drawableLeft="@drawable/scan_set"
-                    android:text="条码设置"
-                    android:textSize="30sp" />
+                    android:layout_marginTop="30dp"
+                    android:drawableLeft="@drawable/db_set"
+                    android:text="查看数据"
+                    android:textSize="50sp" />
 
             </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1.5dip"
+                android:layout_margin="20dp"
+                android:background="#181717"
+                android:layerType="software" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -158,14 +196,14 @@
 
                 <Button
                     android:id="@+id/btn_barcode_setting"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="条码设置" />
-
+                    android:layout_margin="20dp"
+                    android:layout_marginTop="30dp"
+                    android:background="@drawable/btn_style"
+                    android:text="查看数据"
+                    android:textSize="40sp" />
             </LinearLayout>
-
         </LinearLayout>
-
-
     </LinearLayout>
 </LinearLayout>

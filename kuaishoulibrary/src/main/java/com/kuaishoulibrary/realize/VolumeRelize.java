@@ -14,6 +14,7 @@ import android.widget.Toast;
 import com.kuaishoulibrary.KuaishouInterface.VolumeInterface;
 import com.kuaishoulibrary.utils.BitmapUtil;
 import com.kuaishoulibrary.utils.CameraEntity;
+import com.kuaishoulibrary.utils.FileUtils;
 import com.kuaishoulibrary.utils.SharedPreferencesUitl;
 import com.kuaishoulibrary.utils.VolumeUtils;
 
@@ -28,15 +29,19 @@ import org.opencv.core.Mat;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class VolumeRelize implements VolumeInterface, Camera.PreviewCallback, SurfaceHolder.Callback, Camera.PictureCallback {
     private SharedPreferencesUitl preferencesUitl;
 
+
     @Override
     public void initVolumeCamera(Context context, SurfaceView surfaceView) {
         this.context = context;
         this.surfaceView = surfaceView;
+        isJiaozheng = false;
+        isRunning = false;
         preferencesUitl = SharedPreferencesUitl.getInstance(context, "decoeBar");
         EventBus.getDefault().register(VolumeRelize.this);
         mLoaderCallback = new BaseLoaderCallback(context) {
@@ -65,7 +70,12 @@ public class VolumeRelize implements VolumeInterface, Camera.PreviewCallback, Su
 
     @Override
     public void stopVolume() {
-        mCamera.setPreviewCallback(null);
+
+        if (mCamera != null) {
+
+            isRunning = false;
+            mCamera.setPreviewCallback(null);
+        }
     }
 
     @Override
@@ -75,8 +85,15 @@ public class VolumeRelize implements VolumeInterface, Camera.PreviewCallback, Su
 
     @Override
     public void volumeCheck() {
-        isBeijing=false;
-        mCamera.setOneShotPreviewCallback(VolumeRelize.this);
+        isBeijing = false;
+        isJiaozheng = true;
+        if (mCamera != null)
+            mCamera.setOneShotPreviewCallback(VolumeRelize.this);
+    }
+
+    @Override
+    public boolean volumeIsRunning() {
+        return isRunning;
     }
 
 
@@ -103,17 +120,23 @@ public class VolumeRelize implements VolumeInterface, Camera.PreviewCallback, Su
     private BaseLoaderCallback mLoaderCallback;
     private boolean isBeijing;
     private Bitmap backMap = null;
+    private boolean isJiaozheng = false;
+    private boolean isRunning = false;
 
     public void previewPicture(boolean isBeiJing) {
         isBeijing = isBeiJing;
         if (isBeiJing) {
-            mCamera.setOneShotPreviewCallback(VolumeRelize.this);
+            if (mCamera != null) {
+                isRunning = true;
+                mCamera.setOneShotPreviewCallback(VolumeRelize.this);
+            }
         } else {
-//            backMap = BitmapUtil.loadBitmap("/storage/emulated/0/DCIM/Camera/");
-            mCamera.setPreviewCallback(VolumeRelize.this);
+            if (mCamera != null) {
+                isRunning = true;
+                mCamera.setPreviewCallback(VolumeRelize.this);
+
+            }
         }
-//        backMap = BitmapUtil.loadBitmap("/storage/emulated/0/DCIM/Camera/");
-//        mCamera.setPreviewCallback(VolumeRelize.this);
     }
 
     @Override
@@ -135,6 +158,7 @@ public class VolumeRelize implements VolumeInterface, Camera.PreviewCallback, Su
             mCamera.setPreviewDisplay(surfaceHolder);
             Camera.Parameters parameter = mCamera.getParameters();
             parameter.setPreviewSize(1680, 1248);
+            parameter.setExposureCompensation(-3);
             mCamera.setParameters(parameter);
             mCamera.startPreview();
         } catch (IOException localIOException) {
@@ -173,20 +197,22 @@ public class VolumeRelize implements VolumeInterface, Camera.PreviewCallback, Su
         Mat picture = new Mat();
         YuvImage yuvimage = new YuvImage(entity.getYuvData(), ImageFormat.NV21, entity.getWidth(), entity.getHeight(), null);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        //2.5毫米镜头
         yuvimage.compressToJpeg(new android.graphics.Rect(500, 310, 1200, 900), 95, baos);// 80--JPG图片的质量[0-100],100最高
+//        yuvimage.compressToJpeg(new android.graphics.Rect(150, 100, 1500, 1100), 95, baos);// 80--JPG图片的质量[0-100],100最高
         Bitmap bitmap = BitmapFactory.decodeByteArray(baos.toByteArray(), 0, baos.toByteArray().length);
         Log.i("tw", "拍照时间" + (System.currentTimeMillis() - a));
         bitmap = VolumeUtils.grayMap(bitmap);
         if (isBeijing) {
             backMap = bitmap;
-            displayVolumeListener.getVolumeDatas(V, backMap);
+            displayVolumeListener.getVolumeDatas(new double[]{0, 0, 0, 5}, backMap);
             try {
                 if (BitmapUtil.saveFile(bitmap, "beijing", 100)) {
                     // TODO: 2018/3/9   成功
-                    Toast.makeText(context, "拍照背景成功", Toast.LENGTH_SHORT).show();
+//                    Toast.makeText(context, "拍照背景成功", Toast.LENGTH_SHORT).show();
                 } else {
                     // TODO: 2018/3/9   失败
-                    Toast.makeText(context, "失败", Toast.LENGTH_SHORT).show();
+//                    Toast.makeText(context, "失败", Toast.LENGTH_SHORT).show();
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -196,12 +222,26 @@ public class VolumeRelize implements VolumeInterface, Camera.PreviewCallback, Su
                 Utils.bitmapToMat(bitmap, picture);
                 final Bitmap photo1 = Bitmap.createBitmap(backMap.getWidth(), backMap.getHeight(), Bitmap.Config.RGB_565);
                 picture = VolumeUtils.combineBitmap(backMap, picture);
-                VolumeUtils.imageDeal(preferencesUitl.loadArray(), picture, V);
-                Utils.matToBitmap(picture, photo1);
-                if (V[3] == 0) {
-                    Log.i("tw", "全部处理消耗时间" + (System.currentTimeMillis() - a) + "毫秒");
+//                List<String> ss = new ArrayList<String>();
+//                preferencesUitl.loadArray(ss);
+//                SharedPreferencesUitl.loadArray(context, ss);
+//                VolumeUtils.imageDeal(ss, picture, V);
+                if (isJiaozheng) {
+                    VolumeUtils.imageDeal(new ArrayList<String>(), picture, V);
+                } else {
+                    VolumeUtils.imageDeal(FileUtils.getVolumeFile(), picture, V);
                 }
+                Utils.matToBitmap(picture, photo1);
+//                if (V[3] == 0) {
+//                    isRunning = false;
+//                    Log.i("tw", "全部处理消耗时间" + (System.currentTimeMillis() - a) + "毫秒");
+//                    displayVolumeListener.getVolumeDatas(V, photo1);
+//                }else {
+//
+//                    displayVolumeListener.getVolumeDatas(V, null);
+//                }
                 displayVolumeListener.getVolumeDatas(V, photo1);
+
             } else {
                 // TODO: 2018/4/4   请拍背景
                 Toast.makeText(context, "请拍背景", Toast.LENGTH_SHORT).show();
