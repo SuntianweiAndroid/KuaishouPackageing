@@ -38,7 +38,8 @@ task buildJar(type: Jar, dependsOn: ['build']) {
     exclude('**/R\$*.class')
 }
 
-//在terminal 输入执行：
+//在terminal 输入执行：、
+
 //在终端执行生成JAR包
 // gradlew buildJar
 dependencies {
