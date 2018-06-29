@@ -407,6 +407,7 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
                     mImage.setImageBitmap((Bitmap) msg.obj);
                     break;
                 case 3://Tcp接收服务端返回的结果
+                    mTvShowmsg.setText("PASS\n请扫面下一件物品");
                     String reuslt = String.valueOf(msg.obj);
                     //解析
                     try {
@@ -423,9 +424,14 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
                     }
                     break;
                 case 4://tcp连接服务端错误
-
+                    Log.i("xintiao", "心跳失敗,再次重連");
+                    mTvShowmsg.setText("連接錯誤");
+//                    startSocket();
                     break;
                 case 5://当前tcp 服务端的 ip地址
+
+                    break;
+                case 6://
 
                     break;
                 case 10:// 条码/重量/体积 三合一 测量完毕上传数据
@@ -530,7 +536,7 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
                         handler.sendMessage(handler.obtainMessage(11, "保证条码在预览框内"));
                         break;
                     case 3:
-                        handler.sendMessage(handler.obtainMessage(11, "保证条码在预览框内"));
+//                        handler.sendMessage(handler.obtainMessage(11, "保证条码在预览框内"));
                         mWeight.setText("0.00KG");
                         customToolBar.setWeightState("电子秤：断开");
                         break;

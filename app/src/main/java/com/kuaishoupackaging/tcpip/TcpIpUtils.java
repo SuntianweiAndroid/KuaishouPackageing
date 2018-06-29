@@ -53,30 +53,45 @@ public class TcpIpUtils {
             int timeout = 10000;
             client.setSoTimeout(timeout);// 设置阻塞时间
             MyLog.i(TAG, "连接成功");
-            in = new BufferedReader(new InputStreamReader(
-                    client.getInputStream(), "GBK"));
-            out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(
-                    client.getOutputStream(), "GBK")), true);
+
             MyLog.i(TAG, "输入输出流获取成功");
         } catch (UnknownHostException e) {
             MyLog.i(TAG, "连接错误UnknownHostException 重新获取");
             e.printStackTrace();
-            conn();
+            try {
+                client.close();
+                client=null;
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+//            conn();
         } catch (IOException e) {
             MyLog.i(TAG, "连接服务器io错误");
             myHandler.sendMessage(myHandler.obtainMessage(4));
             e.printStackTrace();
+            try {
+                client.close();
+                client=null;
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
         } catch (Exception e) {
             MyLog.i(TAG, "连接服务器错误Exception" + e.getMessage());
             myHandler.sendMessage(myHandler.obtainMessage(4));
             e.printStackTrace();
+            try {
+                client.close();
+                client=null;
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
         }
     }
 
     public void initdate() {
         ip = preferencesUitl.read("ip", "192.168.1.155");
         port = Integer.parseInt(preferencesUitl.read("duankou", "8888"));
-        myHandler.sendMessage(myHandler.obtainMessage(5,ip+port));
+        myHandler.sendMessage(myHandler.obtainMessage(5, ip + port));
         MyLog.i(TAG, "获取到ip端口:" + ip + ";" + port);
     }
 
@@ -119,9 +134,60 @@ public class TcpIpUtils {
             public void run() {
                 final Gson gson = new GsonBuilder().serializeNulls().create();
                 String rusultData = gson.toJson(new operType(0));
-                Send(rusultData);
+                boolean isSend = heratSend(rusultData);
+                if (!isSend) {
+                    Log.i("xintiao", "run:  心跳失敗");
+                    myHandler.sendMessage(myHandler.obtainMessage(4));
+                    try {
+                        isRun = false;
+                        if (receiveThread != null) {
+                            receiveThread = null;
+                        }
+                        if (client != null) {
+                            MyLog.i(TAG, "close in");
+                            in.close();
+                            MyLog.i(TAG, "close out");
+                            out.close();
+                            MyLog.i(TAG, "close client");
+                            client.close();
+                            client=null;
+                        }
+                    } catch (Exception e) {
+                        MyLog.i(TAG, "close err");
+                        e.printStackTrace();
+                    }
+                    conn();
+                }else {
+                    myHandler.sendMessage(myHandler.obtainMessage(3));
+                }
             }
-        }, 0, time * 60000);
+        }, 0, time * 1000);
+    }
+
+    public boolean heratSend(String msg) {
+//        conn();
+        try {
+            if (client != null) {
+                in = new BufferedReader(new InputStreamReader(
+                        client.getInputStream(), "GBK"));
+                out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(
+                        client.getOutputStream(), "GBK")), true);
+                MyLog.i(TAG1, "发送" + msg + "至"
+                        + client.getInetAddress().getHostAddress() + ":"
+                        + String.valueOf(client.getPort()));
+                out.println(msg);
+                out.flush();
+                MyLog.i(TAG1, "发送成功");
+            } else {
+                return false;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            MyLog.i(TAG1, "发送完毕");
+        }
+        return true;
     }
 
     /**
@@ -131,6 +197,10 @@ public class TcpIpUtils {
      */
     public void Send(String mess) {
         try {
+            in = new BufferedReader(new InputStreamReader(
+                    client.getInputStream(), "GBK"));
+            out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(
+                    client.getOutputStream(), "GBK")), true);
             if (client != null) {
                 MyLog.i(TAG1, "发送" + mess + "至"
                         + client.getInetAddress().getHostAddress() + ":"
@@ -142,7 +212,7 @@ public class TcpIpUtils {
             } else {
                 MyLog.i(TAG, "client 不存在");
                 MyLog.i(TAG, "连接不存在重新连接");
-                conn();
+//                conn();
             }
 
         } catch (Exception e) {
@@ -181,4 +251,6 @@ public class TcpIpUtils {
         }
 
     }
+
+
 }
