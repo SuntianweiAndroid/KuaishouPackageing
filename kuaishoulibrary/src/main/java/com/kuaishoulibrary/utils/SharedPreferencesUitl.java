@@ -72,6 +72,9 @@ public class SharedPreferencesUitl {
     public String read(String key, String defValue) {
         return sharedPreferences.getString(key, defValue);
     }
+    public int read(String key, int defValue) {
+        return sharedPreferences.getInt(key, defValue);
+    }
 
     public boolean[] read(String key, boolean[] defValue) {
         boolean[] booleens = new boolean[defValue.length];

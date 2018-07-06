@@ -87,13 +87,16 @@ public class SettingAct extends Activity implements View.OnClickListener {
             case R.id.button1_save:
                 String ip = mEditText1Ip.getText().toString();
                 String duankou = mEditText2Duankou.getText().toString();
-                String heart = mEditTextHert.getText().toString();
+                int heart = 1;
+                if (mEditTextHert.getText().toString().equals("")) {
+                    heart = 1;
+                } else {
+                    heart = Integer.parseInt(mEditTextHert.getText().toString());
+                }
                 preferencesUitl.write("ip", ip);
                 preferencesUitl.write("duankou", duankou);
                 preferencesUitl.write("heart", heart);
                 Toast.makeText(this, "保存设置成功！！！", Toast.LENGTH_SHORT).show();
-//                Intent intenta = new Intent(this, DbShowAct.class);
-//                startActivity(intenta);
                 break;
             case R.id.btn_volume_setting:
                 Intent intent = new Intent(this, VolumeSetingAct.class);

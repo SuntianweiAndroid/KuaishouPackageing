@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">KuaishouPackaing</string>
+    <string name="app_name">快手APP</string>
+    <string name="socket_erro_msg">连接已断开\n1.请检查快手设备wifi是否连接\n2.请点击右上角设置查看通讯\n服务IP端口是否正确</string>
 </resources>

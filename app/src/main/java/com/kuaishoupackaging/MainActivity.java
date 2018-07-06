@@ -24,6 +24,7 @@ import android.widget.Toast;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.honeywell.barcode.ActiveCamera;
+import com.honeywell.barcode.BarcodeBounds;
 import com.honeywell.barcode.HSMDecodeComponent;
 import com.honeywell.barcode.HSMDecodeResult;
 import com.honeywell.barcode.HSMDecoder;
@@ -40,6 +41,7 @@ import com.kuaishoupackaging.db.KuaiShouDatas;
 import com.kuaishoupackaging.tcpip.TcpIpUtils;
 import com.kuaishoupackaging.util.DBUitl;
 import com.kuaishoupackaging.util.DeviceControl;
+import com.kuaishoupackaging.util.DrawView;
 import com.kuaishoupackaging.util.SettingUtils;
 import com.kuaishoupackaging.util.SharedPreferencesUitl;
 import com.kuaishoupackaging.view.CustomToolBar;
@@ -54,7 +56,9 @@ import java.lang.reflect.Method;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Queue;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -85,7 +89,7 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
      */
     private TextView mWeight;
     private LinearLayout mLayoutWeight;
-    private TextView mVolume;
+    private TextView mVolume, mTvsocketerromsg;
     private TextView mIsPass;
     private LinearLayout mFloatId;
     private int dbCount = 0;
@@ -125,6 +129,7 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
     }
 
     private void initView() {
+        mTvsocketerromsg = findViewById(R.id.tv_socket_erro);
         customToolBar = findViewById(R.id.title_bar_layout);
         mVolueLayout = findViewById(R.id.volume_layout);
         customToolBar.setCameraState("相机：已连接");
@@ -357,6 +362,7 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
     @Override
     protected void onPause() {
         super.onPause();
+        stopSocket();
         weightInterface.releaseWeightDev();
         volumeInterface.releaseVolumeCamera();
     }
@@ -407,7 +413,7 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
                     mImage.setImageBitmap((Bitmap) msg.obj);
                     break;
                 case 3://Tcp接收服务端返回的结果
-                    mTvShowmsg.setText("PASS\n请扫面下一件物品");
+                    mTvsocketerromsg.setText("");
                     String reuslt = String.valueOf(msg.obj);
                     //解析
                     try {
@@ -425,7 +431,7 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
                     break;
                 case 4://tcp连接服务端错误
                     Log.i("xintiao", "心跳失敗,再次重連");
-                    mTvShowmsg.setText("連接錯誤");
+                    mTvsocketerromsg.setText(R.string.socket_erro_msg);
 //                    startSocket();
                     break;
                 case 5://当前tcp 服务端的 ip地址
@@ -439,7 +445,7 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
                     final Gson gson = new GsonBuilder().serializeNulls().create();
                     String postData = gson.toJson(new OperBody(barcode, imei, Double.valueOf(weightResult), Double.parseDouble(df.format(volumeDatas[0])), Double.parseDouble(df.format(volumeDatas[1])), Double.parseDouble(df.format(volumeDatas[2])), Double.parseDouble(df.format(Double.parseDouble(df.format(volumeDatas[0])) * Double.parseDouble(df.format(volumeDatas[1])) * Double.parseDouble(df.format(volumeDatas[2])))), SystemClock.currentThreadTimeMillis()));
                     String rusultData = gson.toJson(new ScanDatas(1, postData));
-                    tcpIpUtils.Send(rusultData);
+//                    tcpIpUtils.Send(rusultData);
                     mTvShowmsg.setTextColor(getResources().getColor(R.color.green));
                     mTvShowmsg.setText("PASS\n请扫面下一件物品");
                     dbCount++;
@@ -546,8 +552,11 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
 
     }
 
+    private DrawView drawView;
+
     @Override
     public void displayBarcodeData(String s, long l, HSMDecodeResult[] hsmDecodeResults) {
+        List<BarcodeBounds> barcodeBoundsList = new ArrayList<>();
 //************************
 //        hsmDecoder.enableSound(true);
 //        StringBuilder result = new StringBuilder();
@@ -556,6 +565,7 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
 //            codeBytes[i] = hsmDecodeResults[i].getBarcodeData();
 //            String bar = hsmDecodeResults[i].getBarcodeData();
 //            result.append("码" + i + ":" + bar + "\n");
+//        barcodeBoundsList.add(hsmDecodeResults[i].getBarcodeBounds());
 //        }
 //        mSuccess.setText("条码" + codeBytes.length + "个");
 //        mCode.setTextSize(20);
@@ -576,6 +586,12 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
             }
             barcode = s;
         }
+        barcodeBoundsList.add(hsmDecodeResults[0].getBarcodeBounds());
+        if (drawView != null) {
+            mHsmDecodeComponent.removeView(drawView);
+        }
+        drawView = new DrawView(this, barcodeBoundsList);
+        mHsmDecodeComponent.addView(drawView);
     }
 
     /**

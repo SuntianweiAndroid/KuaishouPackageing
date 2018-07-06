@@ -62,7 +62,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:ems="10"
-                    android:hint="192.168.1.155"
+                    android:text="192.168.1.155"
                     android:textSize="30sp" />
 
                 <TextView
@@ -77,7 +77,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:ems="10"
-                    android:hint="8888"
+                    android:text="8888"
                     android:inputType="number"
                     android:textSize="30sp" />
 
@@ -93,7 +93,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:ems="10"
-                    android:hint="1"
+                    android:text="1"
                     android:inputType="number"
                     android:textSize="30sp" />
 

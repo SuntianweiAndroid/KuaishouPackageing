@@ -58,33 +58,18 @@ public class TcpIpUtils {
         } catch (UnknownHostException e) {
             MyLog.i(TAG, "连接错误UnknownHostException 重新获取");
             e.printStackTrace();
-            try {
-                client.close();
-                client=null;
-            } catch (IOException e1) {
-                e1.printStackTrace();
-            }
+            client = null;
 //            conn();
         } catch (IOException e) {
             MyLog.i(TAG, "连接服务器io错误");
             myHandler.sendMessage(myHandler.obtainMessage(4));
             e.printStackTrace();
-            try {
-                client.close();
-                client=null;
-            } catch (IOException e1) {
-                e1.printStackTrace();
-            }
+            client = null;
         } catch (Exception e) {
             MyLog.i(TAG, "连接服务器错误Exception" + e.getMessage());
             myHandler.sendMessage(myHandler.obtainMessage(4));
             e.printStackTrace();
-            try {
-                client.close();
-                client=null;
-            } catch (IOException e1) {
-                e1.printStackTrace();
-            }
+            client = null;
         }
     }
 
@@ -127,7 +112,9 @@ public class TcpIpUtils {
      * tcp心跳检测是否连接
      */
     public void starterTimer() {
-        int time = Integer.parseInt(preferencesUitl.read("heart", "1"));
+        int time = preferencesUitl.read("heart", 1);
+        if (preferencesUitl.read("heart", 1)==0) {
+        }
         timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
@@ -135,37 +122,77 @@ public class TcpIpUtils {
                 final Gson gson = new GsonBuilder().serializeNulls().create();
                 String rusultData = gson.toJson(new operType(0));
                 boolean isSend = heratSend(rusultData);
-                if (!isSend) {
-                    Log.i("xintiao", "run:  心跳失敗");
-                    myHandler.sendMessage(myHandler.obtainMessage(4));
-                    try {
+                try {
+                    if (client != null) {
+                        client.sendUrgentData(2334); // 发送心跳包
+                        Log.i("tw", "run: 通**************************************");
+                    }
+                    if (!isSend) {
+                        myHandler.sendMessage(myHandler.obtainMessage(4));
                         isRun = false;
                         if (receiveThread != null) {
                             receiveThread = null;
                         }
                         if (client != null) {
                             MyLog.i(TAG, "close in");
-                            in.close();
+                            try {
+                                in.close();
+                            } catch (IOException e1) {
+                                e1.printStackTrace();
+                            }
                             MyLog.i(TAG, "close out");
                             out.close();
                             MyLog.i(TAG, "close client");
-                            client.close();
-                            client=null;
+                            try {
+                                client.close();
+                            } catch (IOException e1) {
+                                e1.printStackTrace();
+                            }
+                            client = null;
                         }
-                    } catch (Exception e) {
-                        MyLog.i(TAG, "close err");
-                        e.printStackTrace();
+
+                        conn();
+                        return;
                     }
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    Log.i("tw", "run: 不通**************************************");
+                    myHandler.sendMessage(myHandler.obtainMessage(4));
+                    isRun = false;
+                    if (receiveThread != null) {
+                        receiveThread = null;
+                    }
+                    if (client != null) {
+                        MyLog.i(TAG, "close in");
+                        try {
+                            in.close();
+                        } catch (IOException e1) {
+                            e1.printStackTrace();
+                        }
+                        MyLog.i(TAG, "close out");
+                        out.close();
+                        MyLog.i(TAG, "close client");
+                        try {
+                            client.close();
+                        } catch (IOException e1) {
+                            e1.printStackTrace();
+                        }
+                        client = null;
+                    }
+
                     conn();
-                }else {
-                    myHandler.sendMessage(myHandler.obtainMessage(3));
+                    return;
                 }
+                myHandler.sendMessage(myHandler.obtainMessage(3));
             }
-        }, 0, time * 1000);
+        }, 0,  1000);
     }
 
+    /*
+      给京东发送心跳包
+     */
     public boolean heratSend(String msg) {
-//        conn();
         try {
             if (client != null) {
                 in = new BufferedReader(new InputStreamReader(
@@ -191,16 +218,16 @@ public class TcpIpUtils {
     }
 
     /**
-     * 发送数据
+     * 发送正常数据
      *
      * @param mess
      */
     public void Send(String mess) {
         try {
             in = new BufferedReader(new InputStreamReader(
-                    client.getInputStream(), "GBK"));
+                    client.getInputStream(), "UTF-8"));
             out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(
-                    client.getOutputStream(), "GBK")), true);
+                    client.getOutputStream(), "UTF-8")), true);
             if (client != null) {
                 MyLog.i(TAG1, "发送" + mess + "至"
                         + client.getInetAddress().getHostAddress() + ":"

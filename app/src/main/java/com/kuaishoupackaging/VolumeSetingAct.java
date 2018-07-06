@@ -50,6 +50,7 @@ public class VolumeSetingAct extends Activity implements VolumeInterface.Display
         super.onCreate(savedInstanceState);
         setContentView(R.layout.check_volume_layout);
         initView();
+        volumeInterface = VolumeManage.getVolumeIntance();
         try {
             DeviceControl deviceControl = new DeviceControl(DeviceControl.PowerType.MAIN);
         } catch (IOException e) {
@@ -59,11 +60,10 @@ public class VolumeSetingAct extends Activity implements VolumeInterface.Display
 
     @Override
     protected void onResume() {
-        super.onResume();
         count = 1;
-        volumeInterface = VolumeManage.getVolumeIntance();
         volumeInterface.initVolumeCamera(this, surfaceview);
         volumeInterface.setDisplayVolumeListener(this);
+        super.onResume();
     }
 
     @Override

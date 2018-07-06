@@ -19,16 +19,19 @@
         android:orientation="horizontal">
 
         <FrameLayout
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent">
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
+
             <SurfaceView
                 android:id="@+id/surfaceview"
-                android:background="@color/colorPrimary"
                 android:layout_width="190dp"
-                android:layout_height="190dp" />
+                android:layout_height="190dp"
+                android:background="@color/colorPrimary" />
+
             <com.honeywell.barcode.HSMDecodeComponent
                 android:id="@+id/hsm_decodeComponent"
-                android:layout_width="690dp"
+                android:layout_width="match_parent"
                 android:layout_height="match_parent"></com.honeywell.barcode.HSMDecodeComponent>
 
             <LinearLayout
@@ -37,6 +40,7 @@
                 android:layout_gravity="center"
                 android:background="#00000000"
                 android:orientation="vertical">
+
                 <TextView
                     android:id="@+id/tv_showmsg"
                     android:layout_width="wrap_content"
@@ -47,6 +51,7 @@
                     android:shadowDx="0"
                     android:shadowDy="2"
                     android:shadowRadius="30"
+
                     android:text="保证条码在预览框内"
                     android:textColor="@color/white"
                     android:textSize="60sp"
@@ -61,21 +66,29 @@
                 android:layout_gravity="bottom" />
 
 
+
             <Button
                 android:id="@+id/btn_code_setting"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="right"
                 android:text="条码设置"
-                android:visibility="gone"
-                android:textColor="#e60a0a" />
+                android:textColor="#e60a0a"
+                android:visibility="gone" />
+            <TextView
+                android:id="@+id/tv_socket_erro"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="right"
+                android:textSize="20sp"
+                android:textColor="@color/colorAccent" />
 
         </FrameLayout>
-
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:layout_weight="2"
             android:orientation="vertical">
 
             <LinearLayout
@@ -135,12 +148,12 @@
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/volume_layout"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_weight="1"
                 android:layout_marginTop="5dp"
+                android:layout_weight="1"
                 android:background="@color/red"
-                android:id="@+id/volume_layout"
                 android:gravity="center"
                 android:orientation="horizontal">
 

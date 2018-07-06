@@ -41,6 +41,10 @@ public class SharedPreferencesUitl {
         editor.putString(key, String.valueOf(value));
         editor.commit();
     }
+    public void write(String key, int value) {
+        editor.putInt(key,value);
+        editor.commit();
+    }
 
     public void write(String key, boolean[] value) {
         for (int i = 0; i < value.length; i++) {
@@ -71,6 +75,9 @@ public class SharedPreferencesUitl {
 
     public String read(String key, String defValue) {
         return sharedPreferences.getString(key, defValue);
+    }
+    public int read(String key, int defValue) {
+        return sharedPreferences.getInt(key, defValue);
     }
 
     public boolean[] read(String key, boolean[] defValue) {
