@@ -32,8 +32,8 @@ import java.util.Queue;
  * ━━━━━━神兽出没━━━━━━
  *
  * @author :孙天伟 in  2018/4/10   17:47.
- *         联系方式:QQ:420401567
- *         功能描述:
+ * 联系方式:QQ:420401567
+ * 功能描述:
  */
 public class WeightRealize implements WeightInterface {
     private SerialPort serialPort = null;
@@ -83,66 +83,66 @@ public class WeightRealize implements WeightInterface {
                                 if (weight != 0) {
                                     queue.offer(weight);
                                     Log.i("duilie", "mainEvent: 开始 ");
-//                                    if (queue.size() > 3) {
+                                    if (queue.size() > 3) {
+                                        Object[] s = queue.toArray();
+                                        for (int j = 1; j < s.length; j++) {
+                                            if ((double) s[s.length - 1] - (double) s[s.length - j - 1] < 0.02) {
+                                                System.out.print((double) s[j] + "dafdafasdfas");
+                                                displayWeightDatasListener.WeightStatas(1, (double) s[s.length - 1]);
+                                                queue.poll();
+                                            } else {
+                                                displayWeightDatasListener.WeightStatas(2, (double) s[s.length - 1]);
+                                                queue.poll();
+                                                break;
+                                            }
+                                        }
+                                    }
+//                                    if(queue.size()>4)
+//                                    {
+//                                        boolean desend = new Boolean(false);
+//                                        int valueInc = new Integer(0);
+//                                        int valueDec = new Integer(0);
+//                                        double diff = new Double(0);
 //                                        Object[] s = queue.toArray();
-//                                        for (int j = 1; j < s.length; j++) {
-//                                            if ((double) s[s.length - 1] - (double) s[s.length - j - 1] < 0.02) {
-//                                                System.out.print((double) s[j] + "dafdafasdfas");
+//                                        for (int j = 1; j < s.length-1; j++)
+//                                        {
+//                                            if((double)s[j]>(double)s[j-1])
+//                                            {
+//                                                valueInc++;
+//                                            }
+//                                            else
+//                                            {
+//                                                valueDec++;
+//                                            }
+//                                            if (diff< Math.abs((double)s[j-1]-(double)s[j]))
+//                                                diff = Math.abs((double)s[j-1]-(double)s[j]);
+//
+//                                        }
+//                                        Log.i("weight", "valueInc"+ valueInc +" valueDec" + valueDec +" diff" + diff);
+//                                        if(valueInc>valueDec) {
+//                                            if(diff<0.02) {
+//                                                System.out.print((double) s[s.length - 1] + "dafdafasdfas");
+//                                                Log.i("weight stable", "w:"+(double)s[s.length - 1]);
 //                                                displayWeightDatasListener.WeightStatas(1, (double) s[s.length - 1]);
-//                                                queue.poll();
-//                                            } else {
+//                                            }
+//                                            else{
+//                                                System.out.print((double) s[s.length - 1] + "dafdafasdfas");
+//                                                Log.i("weight change", "w:"+(double)s[s.length - 1]);
 //                                                displayWeightDatasListener.WeightStatas(2, (double) s[s.length - 1]);
-//                                                queue.poll();
-//                                                break;
 //                                            }
 //                                        }
+//                                        if(valueInc<valueDec) {
+//                                            if(diff<0.1) {
+//                                                System.out.print((double) s[s.length - 1] + "dafdafasdfas");
+//                                                displayWeightDatasListener.WeightStatas(1, (double) s[s.length - 1]);
+//                                            }
+//                                            else{
+//                                                System.out.print((double) s[s.length - 1] + "dafdafasdfas");
+//                                                displayWeightDatasListener.WeightStatas(2, (double) s[s.length - 1]);
+//                                            }
+//                                        }
+//                                        queue.clear();
 //                                    }
-                                    if(queue.size()>4)
-                                    {
-                                        boolean desend = new Boolean(false);
-                                        int valueInc = new Integer(0);
-                                        int valueDec = new Integer(0);
-                                        double diff = new Double(0);
-                                        Object[] s = queue.toArray();
-                                        for (int j = 1; j < s.length-1; j++)
-                                        {
-                                            if((double)s[j]>(double)s[j-1])
-                                            {
-                                                valueInc++;
-                                            }
-                                            else
-                                            {
-                                                valueDec++;
-                                            }
-                                            if (diff< Math.abs((double)s[j-1]-(double)s[j]))
-                                                diff = Math.abs((double)s[j-1]-(double)s[j]);
-
-                                        }
-                                        Log.i("weight", "valueInc"+ valueInc +" valueDec" + valueDec +" diff" + diff);
-                                        if(valueInc>valueDec) {
-                                            if(diff<0.05) {
-                                                System.out.print((double) s[s.length - 1] + "dafdafasdfas");
-                                                Log.i("weight stable", "w:"+(double)s[s.length - 1]);
-                                                displayWeightDatasListener.WeightStatas(1, (double) s[s.length - 1]);
-                                            }
-                                            else{
-                                                System.out.print((double) s[s.length - 1] + "dafdafasdfas");
-                                                Log.i("weight change", "w:"+(double)s[s.length - 1]);
-                                                displayWeightDatasListener.WeightStatas(2, (double) s[s.length - 1]);
-                                            }
-                                        }
-                                        if(valueInc<valueDec) {
-                                            if(diff<0.1) {
-                                                System.out.print((double) s[s.length - 1] + "dafdafasdfas");
-                                                displayWeightDatasListener.WeightStatas(1, (double) s[s.length - 1]);
-                                            }
-                                            else{
-                                                System.out.print((double) s[s.length - 1] + "dafdafasdfas");
-                                                displayWeightDatasListener.WeightStatas(2, (double) s[s.length - 1]);
-                                            }
-                                        }
-                                        queue.clear();
-                                    }
                                 } else {
                                     displayWeightDatasListener.WeightStatas(2, weight);
                                     queue.clear();
@@ -175,8 +175,12 @@ public class WeightRealize implements WeightInterface {
     }
 
     public void stopWeight() {
-        serialPort.CloseSerial(serialPort.getFd());
-        readThread.interrupt();
+        if (serialPort != null) {
+            serialPort.CloseSerial(serialPort.getFd());
+        }
+        if (readThread != null) {
+            readThread.interrupt();
+        }
     }
 
 

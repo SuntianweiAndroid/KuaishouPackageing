@@ -50,6 +50,7 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
     //    compile(name: 'openCVLibrary330-release', ext: 'aar')
     //    evenbus 传递数
-    //    implementation 'org.greenrobot:eventbus:3.0.0'
-    implementation files('libs/device.jar')
+    api 'org.greenrobot:eventbus:3.0.0'
+    api 'com.speedata:deivice:+'
+
 }

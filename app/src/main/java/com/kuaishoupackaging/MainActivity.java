@@ -4,6 +4,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.hardware.Camera;
 import android.os.Bundle;
 import android.os.Handler;
@@ -14,8 +15,6 @@ import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.SurfaceView;
-import android.view.View;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -29,10 +28,13 @@ import com.honeywell.barcode.HSMDecodeComponent;
 import com.honeywell.barcode.HSMDecodeResult;
 import com.honeywell.barcode.HSMDecoder;
 import com.honeywell.barcode.Symbology;
+import com.honeywell.camera.CameraManager;
+import com.honeywell.plugins.decode.DecodeResultListener;
 import com.kuaishoulibrary.KuaishouInterface.VolumeInterface;
 import com.kuaishoulibrary.KuaishouInterface.WeightInterface;
 import com.kuaishoulibrary.VolumeManage;
 import com.kuaishoulibrary.WeightManage;
+import com.kuaishoulibrary.utils.Logcat;
 import com.kuaishoulibrary.utils.PlaySound;
 import com.kuaishoupackaging.base.BaseAct;
 import com.kuaishoupackaging.been.OperBody;
@@ -41,17 +43,21 @@ import com.kuaishoupackaging.db.KuaiShouDatas;
 import com.kuaishoupackaging.tcpip.TcpIpUtils;
 import com.kuaishoupackaging.util.DBUitl;
 import com.kuaishoupackaging.util.DeviceControl;
-import com.kuaishoupackaging.util.DrawView;
-import com.kuaishoupackaging.util.SettingUtils;
+import com.kuaishoupackaging.util.BarcodeDrawView;
 import com.kuaishoupackaging.util.SharedPreferencesUitl;
 import com.kuaishoupackaging.view.CustomToolBar;
-import com.sc100.HuoniManage;
-import com.sc100.Huoniinterface.HuoniScan;
+import com.speedata.hwlib.ActivationManager;
+import com.speedata.hwlib.net.DialogShowMsg;
+import com.speedata.hwlib.net.Global;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
@@ -65,7 +71,7 @@ import java.util.TimerTask;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class MainActivity extends BaseAct implements WeightInterface.DisplayWeightDatasListener, VolumeInterface.DisplayVolumeListener, View.OnClickListener, HuoniScan.DisplayBarcodeDataListener, CustomToolBar.BtnClickListener, HuoniScan.HuoniscanListener {
+public class MainActivity extends BaseAct implements WeightInterface.DisplayWeightDatasListener, VolumeInterface.DisplayVolumeListener, CustomToolBar.BtnClickListener, DecodeResultListener {
 
     private DecimalFormat df;
     private SurfaceView mSurfaceview;
@@ -100,16 +106,15 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
     private String weightResult;
     private WeightInterface weightInterface;
     private VolumeInterface volumeInterface;
-    private SettingUtils settingUtils;
-    private HuoniScan huoniScan;
+    //    private HuoniScan huoniScan;
     private HSMDecoder hsmDecoder;
+    private ActivationManager activationManager;
     private com.honeywell.camera.CameraManager cameraManager;
     private boolean[] bl = new boolean[48];
     private DeviceControl deviceControl;
     /**
      * 条码设置
      */
-    private Button mBtnCodeSetting;
     public CustomToolBar customToolBar;
     private String barcode = "";
 
@@ -132,7 +137,7 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
         mTvsocketerromsg = findViewById(R.id.tv_socket_erro);
         customToolBar = findViewById(R.id.title_bar_layout);
         mVolueLayout = findViewById(R.id.volume_layout);
-        customToolBar.setCameraState("相机：已连接");
+//        customToolBar.setCameraState("相机：已连接");
         customToolBar.setTvExportVisable(false);
         customToolBar.setSetingBackground(R.drawable.title_seting);
         customToolBar.setTitleBarListener(this);
@@ -148,11 +153,9 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
         mVolume = findViewById(R.id.volume);
         mIsPass = findViewById(R.id.is_pass);
         mFloatId = findViewById(R.id.float_id);
-        mBtnCodeSetting = findViewById(R.id.btn_code_setting);
-        mBtnCodeSetting.setOnClickListener(this);
         try {
             deviceControl = new DeviceControl(DeviceControl.PowerType.MAIN);
-            deviceControl.MainPowerOn(93);//体积激光
+//            deviceControl.MainPowerOn(93);//体积激光
             deviceControl.MainPowerOn(98);//扫码灯光
         } catch (IOException e) {
             e.printStackTrace();
@@ -160,22 +163,26 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
     }
 
     private void initLibrary() {
+        EventBus.getDefault().register(this);
         PlaySound.initSoundPool(this);
         dbUitl = new DBUitl();//初始化数据库util
         preferencesUitl = SharedPreferencesUitl.getInstance(this, "decoeBar");
         df = new DecimalFormat("######0.00");
         //初始化霍尼扫描解码
-        huoniScan = HuoniManage.getKuaishouIntance();
-        huoniScan.intScanDecode(MainActivity.this);
-        huoniScan.setdisplayBarcodeData(this);
-        huoniScan.setHuoniScanLibraryState(this);
-        hsmDecoder = huoniScan.getHuoniHsmDecoder();
-        cameraManager = huoniScan.getHuoniCameraManager(MainActivity.this);
-        settingUtils = new SettingUtils(MainActivity.this, huoniScan.getHuoniHsmDecoder(), preferencesUitl);
-
+        hsmDecoder = HSMDecoder.getInstance(MainActivity.this);
+        hsmDecoder.addResultListener(MainActivity.this);
+        activationManager = new ActivationManager(MainActivity.this);
+        activationManager.activate();//链接后台请求激活扫描库
+        cameraManager = CameraManager.getInstance(this);
+//        hsmDecoder.setActiveCamera(ActiveCamera.FRONT_FACING);//前置 摄像头
+//        huoniScan = HuoniManage.getKuaishouIntance();
+//        huoniScan.intScanDecode(MainActivity.this);
+//        huoniScan.setdisplayBarcodeData(this);
+//        huoniScan.setHuoniScanLibraryState(this);
+//        hsmDecoder = huoniScan.getHuoniHsmDecoder();
+//        cameraManager = huoniScan.getHuoniCameraManager(MainActivity.this);
         //初始化提及测量
-        volumeInterface = VolumeManage.getVolumeIntance();
-
+//        volumeInterface = VolumeManage.getVolumeIntance();
 
         //初始化称重
         weightInterface = WeightManage.getKuaishouIntance();
@@ -184,9 +191,11 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
 
     private long startTime = 0;
 
+    @SuppressLint("HardwareIds")
     @Override
     protected void onResume() {
-        startSocket();
+
+//        startSocket();
         TelephonyManager telephonyManager = (TelephonyManager) this.getSystemService(this.TELEPHONY_SERVICE);
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
@@ -199,10 +208,10 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
             return;
         }
         imei = telephonyManager.getDeviceId();
-        volumeInterface.initVolumeCamera(MainActivity.this, mSurfaceview);
-        volumeInterface.setDisplayVolumeListener(this);
+//        volumeInterface.initVolumeCamera(MainActivity.this, mSurfaceview);
+//        volumeInterface.setDisplayVolumeListener(this);
         weightInterface.initWeight();
-        customToolBar.setCameraState("相机：" + preferencesUitl.read("hsmDecoder", ""));
+//        customToolBar.setCameraState("相机：" + preferencesUitl.read("hsmDecoder", ""));
         barcode = "";
         mTvShowmsg.setText("保证条码在预览框内");
         //查询缓存的快件条码
@@ -212,39 +221,21 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
             Log.i("BarCodeQueue", "onResume: " + anOo);
         }
         starterTimer();//检测所有状态
-        for (int i = 0; i < 48; i++) {
-            bl[i] = preferencesUitl.read("decodeType" + i, false);
-        }
-        for (int i = 0; i < bl.length; i++) {
-            if (i == 47) {
-                if (bl[47]) {
-                    huoniScan.getHuoniHsmDecoder().setActiveCamera(ActiveCamera.FRONT_FACING);
-                } else {
-                    huoniScan.getHuoniHsmDecoder().setActiveCamera(ActiveCamera.REAR_FACING);
-                }
-            } else {
-                if (bl[i]) {
-                    huoniScan.getHuoniHsmDecoder().enableSymbology(Symbology.SYMS[i]);
-                } else {
-                    huoniScan.getHuoniHsmDecoder().disableSymbology(Symbology.SYMS[i]);
-                }
-            }
-        }
-        hsmDecoder.enableSymbology(Symbology.QR);
         hsmDecoder.enableSymbology(Symbology.CODE128);
         hsmDecoder.enableSymbology(Symbology.CODE39);
         hsmDecoder.enableSound(false);
+
         cameraManager.reopenCamera();
         startTime = SystemClock.currentThreadTimeMillis();
         camera1 = cameraManager.getCamera();
         parameters1 = camera1.getParameters();
         parameters1.setExposureCompensation(-3);
-        parameters1.setAutoWhiteBalanceLock(true);
+//        parameters1.setAutoWhiteBalanceLock(true);
         parameters1.setColorEffect(Camera.Parameters.EFFECT_MONO);
         parameters1.setPreviewSize(1920, 1080);
         camera1.setParameters(parameters1);
-        setCameraParams();
-        startTimer();
+//        setCameraParams();
+//        startTimer();
         super.onResume();
 
     }
@@ -362,9 +353,9 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
     @Override
     protected void onPause() {
         super.onPause();
-        stopSocket();
+//        stopSocket();
         weightInterface.releaseWeightDev();
-        volumeInterface.releaseVolumeCamera();
+//        volumeInterface.releaseVolumeCamera();
     }
 
     @Override
@@ -377,17 +368,21 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
     protected void onDestroy() {
         super.onDestroy();
         try {
-            deviceControl.MainPowerOff(93);
+//            deviceControl.MainPowerOff(93);
             deviceControl.MainPowerOff(98);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        huoniScan.release();
-
+//        huoniScan.release();
+        EventBus.getDefault().unregister(this);
+        if (hsmDecoder != null) {
+            hsmDecoder.removeResultListener(this);
+        }
+        HSMDecoder.disposeInstance();
         if (timer != null) {
             timer.cancel();
         }
-        stopSocket();
+//        stopSocket();
     }
 
     @SuppressLint("HandlerLeak")
@@ -432,7 +427,6 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
                 case 4://tcp连接服务端错误
                     Log.i("xintiao", "心跳失敗,再次重連");
                     mTvsocketerromsg.setText(R.string.socket_erro_msg);
-//                    startSocket();
                     break;
                 case 5://当前tcp 服务端的 ip地址
 
@@ -441,10 +435,11 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
 
                     break;
                 case 10:// 条码/重量/体积 三合一 测量完毕上传数据
-                    dbUitl.insertDtata(new KuaiShouDatas((String) msg.obj, weightResult + "kg", "长" + volumeDatas[0] + "宽" + volumeDatas[1] + "高" + volumeDatas[2], testTime(System.currentTimeMillis())));
-                    final Gson gson = new GsonBuilder().serializeNulls().create();
-                    String postData = gson.toJson(new OperBody(barcode, imei, Double.valueOf(weightResult), Double.parseDouble(df.format(volumeDatas[0])), Double.parseDouble(df.format(volumeDatas[1])), Double.parseDouble(df.format(volumeDatas[2])), Double.parseDouble(df.format(Double.parseDouble(df.format(volumeDatas[0])) * Double.parseDouble(df.format(volumeDatas[1])) * Double.parseDouble(df.format(volumeDatas[2])))), SystemClock.currentThreadTimeMillis()));
-                    String rusultData = gson.toJson(new ScanDatas(1, postData));
+                    dbUitl.insertDtata(new KuaiShouDatas((String) msg.obj, weightResult + "kg", "长" + 10 + "宽" + 10 + "高" + 10, testTime(System.currentTimeMillis())));
+//                    dbUitl.insertDtata(new KuaiShouDatas((String) msg.obj, weightResult + "kg", "长" + volumeDatas[0] + "宽" + volumeDatas[1] + "高" + volumeDatas[2], testTime(System.currentTimeMillis())));
+//                    final Gson gson = new GsonBuilder().serializeNulls().create();
+//                    String postData = gson.toJson(new OperBody(barcode, imei, Double.valueOf(weightResult), Double.parseDouble(df.format(volumeDatas[0])), Double.parseDouble(df.format(volumeDatas[1])), Double.parseDouble(df.format(volumeDatas[2])), Double.parseDouble(df.format(Double.parseDouble(df.format(volumeDatas[0])) * Double.parseDouble(df.format(volumeDatas[1])) * Double.parseDouble(df.format(volumeDatas[2])))), SystemClock.currentThreadTimeMillis()));
+//                    String rusultData = gson.toJson(new ScanDatas(1, postData));
 //                    tcpIpUtils.Send(rusultData);
                     mTvShowmsg.setTextColor(getResources().getColor(R.color.green));
                     mTvShowmsg.setText("PASS\n请扫面下一件物品");
@@ -486,7 +481,8 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
                 if (barcode.equals("")) {
                     return;
                 }
-                if (!BarCodeQueue.contains(barcode) && weightState && volumeState) {//查解码队列里是否存在
+//                if (!BarCodeQueue.contains(barcode) && weightState && volumeState) {//查解码队列里是否存在  三合一
+                if (!BarCodeQueue.contains(barcode) && weightState) {//查解码队列里是否存在
                     BarCodeQueue.offer(barcode);
                     if (BarCodeQueue.size() > 2) {
                         Object[] s = BarCodeQueue.toArray();
@@ -522,22 +518,22 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
                         customToolBar.setWeightState("电子秤：已连接");
                         mLayoutWeight.setBackgroundColor(getResources().getColor(R.color.green));
                         weightResult = df.format(v);
-                        mWeight.setText(df.format(v));
+                        mWeight.setText(df.format(v) + "KG");
                         weightState = true;
                         break;
                     case 2:
                         customToolBar.setWeightState("电子秤：已连接");
-                        mWeight.setText(df.format(v));
+                        mWeight.setText(df.format(v) + "KG");
                         if (v == 0) {
-                            volumeInterface.stopVolume();
+//                            volumeInterface.stopVolume();
                             weightState = false;
                             volumeState = false;
                         } else {
                             volumeState = false;
-                            Log.i("kankan", "run: " + volumeInterface.volumeIsRunning());
-                            if (!volumeInterface.volumeIsRunning()) {
-                                volumeInterface.volumePreviewPicture(false);
-                            }
+//                            Log.i("kankan", "run: " + volumeInterface.volumeIsRunning());
+//                            if (!volumeInterface.volumeIsRunning()) {
+//                                volumeInterface.volumePreviewPicture(false);
+//                            }
                         }
                         handler.sendMessage(handler.obtainMessage(11, "保证条码在预览框内"));
                         break;
@@ -552,10 +548,133 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
 
     }
 
-    private DrawView drawView;
+    private BarcodeDrawView drawView;
+
+//    @Override
+//    public void displayBarcodeData(String s, long l, HSMDecodeResult[] hsmDecodeResults) {
+//        List<BarcodeBounds> barcodeBoundsList = new ArrayList<>();
+////************************
+////        hsmDecoder.enableSound(true);
+////        StringBuilder result = new StringBuilder();
+////        String[] codeBytes = new String[hsmDecodeResults.length];
+////        for (int i = 0; i < hsmDecodeResults.length; i++) {
+////            codeBytes[i] = hsmDecodeResults[i].getBarcodeData();
+////            String bar = hsmDecodeResults[i].getBarcodeData();
+////            result.append("码" + i + ":" + bar + "\n");
+////        barcodeBoundsList.add(hsmDecodeResults[i].getBarcodeBounds());
+////        }
+////        mSuccess.setText("条码" + codeBytes.length + "个");
+////        mCode.setTextSize(20);
+////        handler.sendMessage(handler.obtainMessage(12, result.toString()));
+//        //***********************
+////        mTvShowmsg.setText(count+"次");
+//
+//        if (isJingdDongCodes("76196584344-1-1-23")) {//京东判断条码
+//            handler.sendMessage(handler.obtainMessage(12, s));//将解到码实时更新界面
+//            if (BarCodeQueue.contains(s)) {
+//                if (!s.equals(barcode)) {
+//                    PlaySound.play(PlaySound.REPETITION, PlaySound.NO_CYCLE);
+//                    handler.sendMessage(handler.obtainMessage(11, "重复扫描\n请扫描下一件物品"));
+//                    Log.i("db", "播放声音");
+//                }
+//            }
+//            barcode = s;
+//        }
+//        barcodeBoundsList.add(hsmDecodeResults[0].getBarcodeBounds());
+//        if (drawView != null) {
+//            mHsmDecodeComponent.removeView(drawView);
+//        }
+//        drawView = new BarcodeDrawView(this, barcodeBoundsList);
+//        mHsmDecodeComponent.addView(drawView);
+//    }
+
+    /**
+     * 判断是否符合京東条码格式
+     */
+    public boolean isJingdDongCodes(String s) {
+
+        Pattern pattern = Pattern.compile("^([A-Za-z0-9]{8,})(-(?=[0-9]{1,5}-)|N(?=[0-9]{1,5}S))([1-9]{1}[0-9]{0,4})(-(?=[0-9]{1,5}-)|S(?=[0-9]{1,5}H))([1-9]{1}[0-9]{0,4})([-|H][A-Za-z0-9]*)$");
+        Matcher matcher = pattern.matcher(s);
+        //正则改为2个字符|null+16位数字（8位日期+8位序列）
+        return matcher.matches();
+
+    }
+
 
     @Override
-    public void displayBarcodeData(String s, long l, HSMDecodeResult[] hsmDecodeResults) {
+    public void getVolumeDatas(double[] bytes, Bitmap bitmap) {
+        // TODO: 2018/4/10    体积计算结果
+        handler.sendMessage(handler.obtainMessage(2, bitmap));
+        handler.sendMessage(handler.obtainMessage(1, bytes));
+    }
+
+    @Override
+    public void exportClick() {
+
+    }
+
+    @Override
+    public void settingClick() {
+        intentAct(SettingAct.class);
+    }
+
+    //    @Override
+//    public void huoniLibraryState(String s) {
+//        preferencesUitl.write("hsmDecoder", s);
+//        customToolBar.setCameraState("相机：" + s);
+//    }
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void showDialogMsg(DialogShowMsg event) {
+        String msg = event.getMsg();
+        // 需要初始或使能条码类型
+        hsmDecoder.enableAimer(false);
+        hsmDecoder.setOverlayText("");
+        hsmDecoder.setOverlayTextColor(Color.RED);
+        switch (event.getTag()) {
+            case Global.REQUEST_PREPARE://请求服务准备
+                Logcat.d("REQUEST_PREPARE:" + msg);
+                Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+                break;
+            case Global.REQUEST_ERROR://请求服务失败y
+                Logcat.d("error " + msg);
+                if (msg != null) {
+                    customToolBar.setCameraState("相机：失败");
+                    Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+                }
+                break;
+            case Global.REQUEST_SUCCESS://请求服务成功
+                Logcat.d("REQUEST_SUCCESS:" + msg);
+                Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+                break;
+            case Global.REGISTER_SUCCESS://激活成功 需要初始或使能条码类型
+                hsmDecoder.enableSymbology(Symbology.CODE128);
+                hsmDecoder.enableSymbology(Symbology.CODE39);
+                customToolBar.setCameraState("相机：成功");
+                Logcat.d("REGISTER_SUCCESS");
+                Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+                break;
+            case Global.REGISTER_FAILED://激活失败  也需要初始或使能条码类型
+                customToolBar.setCameraState("相机：失败");
+                Logcat.d("REGISTER_FAILED:" + msg);
+                Toast.makeText(this, "激活失败", Toast.LENGTH_SHORT).show();
+                break;
+            default:
+                break;
+        }
+    }
+
+    public void startSocket() {
+        tcpIpUtils = new TcpIpUtils(handler, MainActivity.this);
+        tcpIpUtils.startss();
+        tcpIpUtils.starterTimer();
+    }
+
+    private void stopSocket() {
+        tcpIpUtils.close();
+    }
+
+    @Override
+    public void onHSMDecodeResult(HSMDecodeResult[] hsmDecodeResults) {
         List<BarcodeBounds> barcodeBoundsList = new ArrayList<>();
 //************************
 //        hsmDecoder.enableSound(true);
@@ -573,82 +692,85 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
         //***********************
 //        mTvShowmsg.setText(count+"次");
 
-        if (isJingdDongCodes("76196584344-1-1-23")) {//京东判断条码
-
-            handler.sendMessage(handler.obtainMessage(12, s));//将解到码实时更新界面
-
-            if (BarCodeQueue.contains(s)) {
-                if (!s.equals(barcode)) {
-                    PlaySound.play(PlaySound.REPETITION, PlaySound.NO_CYCLE);
-                    handler.sendMessage(handler.obtainMessage(11, "重复扫描\n请扫面下一件物品"));
-                    Log.i("db", "播放声音");
+//        if (isJingdDongCodes("76196584344-1-1-23")) {//京东判断条码
+        String decode = "";
+        if (hsmDecodeResults.length > 0) {
+            HSMDecodeResult firstResult = hsmDecodeResults[0];
+            byte[] da = firstResult.getBarcodeDataBytes();
+            if (isUTF8(firstResult.getBarcodeDataBytes())) {
+                //utf-8格式
+                try {
+                    decode = new String(firstResult.getBarcodeDataBytes(),
+                            "utf8");
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                //gbk格式
+                try {
+                    decode = new String(firstResult.getBarcodeDataBytes(),
+                            "gbk");
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
                 }
             }
-            barcode = s;
         }
+        handler.sendMessage(handler.obtainMessage(12, decode));//将解到码实时更新界面
+        if (BarCodeQueue.contains(decode)) {
+            if (!decode.equals(barcode)) {
+                PlaySound.play(PlaySound.REPETITION, PlaySound.NO_CYCLE);
+                handler.sendMessage(handler.obtainMessage(11, "重复扫描\n请扫描下一件物品"));
+                Log.i("db", "播放声音");
+            }
+        }
+        barcode = decode;
+//        }
         barcodeBoundsList.add(hsmDecodeResults[0].getBarcodeBounds());
         if (drawView != null) {
             mHsmDecodeComponent.removeView(drawView);
         }
-        drawView = new DrawView(this, barcodeBoundsList);
+        drawView = new BarcodeDrawView(this, barcodeBoundsList);
         mHsmDecodeComponent.addView(drawView);
-    }
-
-    /**
-     * 判断是否符合京東条码格式
-     */
-    public boolean isJingdDongCodes(String s) {
-
-        Pattern pattern = Pattern.compile("^([A-Za-z0-9]{8,})(-(?=[0-9]{1,5}-)|N(?=[0-9]{1,5}S))([1-9]{1}[0-9]{0,4})(-(?=[0-9]{1,5}-)|S(?=[0-9]{1,5}H))([1-9]{1}[0-9]{0,4})([-|H][A-Za-z0-9]*)$");
-        Matcher matcher = pattern.matcher(s);
-        //正则改为2个字符|null+16位数字（8位日期+8位序列）
-        return matcher.matches();
 
     }
 
+    private boolean IsUtf8 = false;
 
-    @Override
-    public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.btn_code_setting:
-                //跳转到数据库查看界面
-                settingUtils.dialogMoreChoice();
-                break;
+    //判断扫描的内容是否是UTF8的中文内容
+    private boolean isUTF8(byte[] sx) {
+        //Log.d(TAG, "begian to set codeset");
+        for (int i = 0; i < sx.length; ) {
+            if (sx[i] < 0) {
+                if ((sx[i] >>> 5) == 0x7FFFFFE) {
+                    if (((i + 1) < sx.length) && ((sx[i + 1] >>> 6) == 0x3FFFFFE)) {
+                        i = i + 2;
+                        IsUtf8 = true;
+                    } else {
+                        if (IsUtf8)
+                            return true;
+                        else
+                            return false;
+                    }
+                } else if ((sx[i] >>> 4) == 0xFFFFFFE) {
+                    if (((i + 2) < sx.length) && ((sx[i + 1] >>> 6) == 0x3FFFFFE) && ((sx[i + 2] >>> 6) == 0x3FFFFFE)) {
+                        i = i + 3;
+                        IsUtf8 = true;
+                    } else {
+                        if (IsUtf8)
+                            return true;
+                        else
+                            return false;
+                    }
+                } else {
+                    if (IsUtf8)
+                        return true;
+                    else
+                        return false;
+                }
+            } else {
+                i++;
+            }
         }
-    }
-
-    @Override
-    public void getVolumeDatas(double[] bytes, Bitmap bitmap) {
-        // TODO: 2018/4/10    体积计算结果
-        handler.sendMessage(handler.obtainMessage(2, bitmap));
-        handler.sendMessage(handler.obtainMessage(1, bytes));
-    }
-
-    @Override
-    public void exportClick() {
-
-    }
-
-    @Override
-    public void settingClick() {
-//        intentAct(DbShowAct.class);
-        intentAct(SettingAct.class);
-    }
-
-    @Override
-    public void huoniLibraryState(String s) {
-        preferencesUitl.write("hsmDecoder", s);
-        customToolBar.setCameraState("相机：" + s);
-    }
-
-    public void startSocket() {
-        tcpIpUtils = new TcpIpUtils(handler, MainActivity.this);
-        tcpIpUtils.startss();
-        tcpIpUtils.starterTimer();
-    }
-
-
-    private void stopSocket() {
-        tcpIpUtils.close();
+        return true;
     }
 }

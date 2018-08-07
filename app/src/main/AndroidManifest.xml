@@ -6,13 +6,21 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <!--设备电源锁-->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"></uses-permission>
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"></uses-permission>
     <uses-permission android:name="android.permission.INTERNET" />
 
     <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" /> <!-- 向SDCard写入数据权限 -->
-    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+
+    <!-- 获取IMEI权限 -->
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+
+    <!-- 必须的权限 -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+
     <application
         android:name=".base.MyAplicatin"
         android:allowBackup="true"
@@ -36,12 +44,10 @@
             android:screenOrientation="landscape" />
         <activity
             android:name=".VolumeSetingAct"
-            android:screenOrientation="landscape">
-        </activity>
+            android:screenOrientation="landscape" />
         <activity
             android:name=".SettingAct"
-            android:screenOrientation="landscape">
-        </activity>
+            android:screenOrientation="landscape" />
 
         <receiver android:name=".base.BootBroadcastReceiver">
             <intent-filter>
@@ -49,6 +55,18 @@
                 <category android:name="android.intent.category.HOME" />
             </intent-filter>
         </receiver>
+        <!-- 正式key@@@@@@@@@@@@@@@@@@@@-->
+        <meta-data
+            android:name="companyId"
+            android:value="b8254759-295e-43c7-b4d1-0acb1f2a0c33" />
+        <!-- 正式key@@@@@@@@@@@@@@@@@@@@-->
     </application>
+    <!-- 测试key##################33-->
+    <!--<application>-->
+    <!--<meta-data-->
+    <!--android:name="companyId"-->
+    <!--android:value="d7a2b616-d2de-4ca5-8e67-679875bdb9f0"></meta-data>-->
+    <!--</application>-->
+    <!-- 测试key################-->
 
 </manifest>

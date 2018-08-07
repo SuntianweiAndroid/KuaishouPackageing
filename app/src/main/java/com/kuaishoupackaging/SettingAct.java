@@ -10,9 +10,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.kuaishoupackaging.util.SettingUtils;
 import com.kuaishoupackaging.util.SharedPreferencesUitl;
-import com.sc100.HuoniManage;
 
 public class SettingAct extends Activity implements View.OnClickListener {
 
@@ -46,7 +44,6 @@ public class SettingAct extends Activity implements View.OnClickListener {
      * 条码设置
      */
     private Button mBtnBarcodeSetting;
-    private SettingUtils settingUtils;
     /**
      * 120
      */
@@ -59,7 +56,6 @@ public class SettingAct extends Activity implements View.OnClickListener {
         initView();
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
         preferencesUitl = SharedPreferencesUitl.getInstance(this, "decoeBar");
-        settingUtils = new SettingUtils(SettingAct.this, HuoniManage.getKuaishouIntance().getHuoniHsmDecoder(), preferencesUitl);
     }
 
 
@@ -68,14 +64,16 @@ public class SettingAct extends Activity implements View.OnClickListener {
         mEditText2Duankou = findViewById(R.id.editText2_duankou);
         mButton1Save = findViewById(R.id.button1_save);
         mButton1Save.setOnClickListener(this);
+        mButton1Save.setClickable(false);
         mBtnVolumeSetting = findViewById(R.id.btn_volume_setting);
         mBtnVolumeSetting.setOnClickListener(this);
+        mBtnVolumeSetting.setClickable(false);
         mBtnBarcodeSetting = findViewById(R.id.btn_barcode_setting);
         mBtnBarcodeSetting.setOnClickListener(this);
-        mTextView1 = (TextView) findViewById(R.id.textView1);
-        mEditText1Ip = (EditText) findViewById(R.id.editText1_ip);
-        mEditText2Duankou = (EditText) findViewById(R.id.editText2_duankou);
-        mEditTextHert = (EditText) findViewById(R.id.editText_hert);
+        mTextView1 = findViewById(R.id.textView1);
+        mEditText1Ip = findViewById(R.id.editText1_ip);
+        mEditText2Duankou = findViewById(R.id.editText2_duankou);
+        mEditTextHert = findViewById(R.id.editText_hert);
         mEditTextHert.setOnClickListener(this);
     }
 
@@ -104,7 +102,6 @@ public class SettingAct extends Activity implements View.OnClickListener {
 
                 break;
             case R.id.btn_barcode_setting:
-//                settingUtils.dialogMoreChoice();//条码使能设置
                 Intent intent1 = new Intent(this, DbShowAct.class);
                 startActivity(intent1);
                 break;

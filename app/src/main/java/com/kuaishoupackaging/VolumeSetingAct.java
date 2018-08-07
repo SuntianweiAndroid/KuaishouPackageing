@@ -123,23 +123,7 @@ public class VolumeSetingAct extends Activity implements VolumeInterface.Display
             switch (msg.what) {
                 case 1:
                     double[] V = (double[]) msg.obj;
-                    if (V[3] == 1) {
-                        mTvShow.setText("第" + count + "次处理失败，请重新处理！");
-//                        mVolueLayout.setBackgroundColor(getResources().getColor(R.color.red));
-//                        mTvShowmsg.setText("您的摆放不正确");
-                    } else if (V[3] == 2) {
-                        mTvShow.setText("第" + count + "次处理失败，请重新处理！");
-//                        volumeState = false;
-//                        mTvShowmsg.setText("线缺失");
-                    } else if (V[3] == 3) {
-                        mTvShow.setText("第" + count + "次理失败，请重新处理！");
-//                        volumeState = false;
-//                        mTvShowmsg.setText("请往中心位置摆放");
-                    } else if (V[3] == 4) {
-                        mTvShow.setText("第" + count + "次处理失败，请重新处理！");
-//                        volumeState = false;
-//                        mTvShowmsg.setText("请往中心位置摆放");
-                    } else if (V[3] == 0) {
+                    if (V[3] == 0) {
                         if (count > 5) {
                             mTvShow.setText("5次校正已完成，请点击校正完成按钮！");
                         } else {
@@ -151,6 +135,14 @@ public class VolumeSetingAct extends Activity implements VolumeInterface.Display
                         count++;
                     } else if (V[3] == 5) {
                         mTvShow.setText("背景拍摄成功！");
+                    } else if (V[3] == 6) {
+                        mTvShow.setText("背景拍摄失败！");
+                    } else {
+                        if (count > 5) {
+                            mTvShow.setText("5次校正已完成，请点击校正完成按钮！");
+                        } else {
+                            mTvShow.setText("第" + count + "次处理失败，请重新处理！");
+                        }
                     }
                     break;
                 case 2:
@@ -169,6 +161,7 @@ public class VolumeSetingAct extends Activity implements VolumeInterface.Display
                     break;
                 case 5:
                     count = 1;
+                    Testdata.clear();
                     mTvShow.setText("校正失败，请重新进行校正操作！");
                     break;
             }
@@ -180,18 +173,21 @@ public class VolumeSetingAct extends Activity implements VolumeInterface.Display
     public void onClick(View v) {
         if (v == btnBackground) {
             mTvShow.setText("正在处理……");
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    SystemClock.sleep(1500);
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            volumeInterface.volumePreviewPicture(true);
-                        }
-                    });
-                }
-            }).start();
+//                new Thread(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        SystemClock.sleep(1500);
+//                        runOnUiThread(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                volumeInterface.volumePreviewPicture(true);
+//                            }
+//                        });
+//                    }
+//                }).start();
+            aa = 0;
+            handler.postDelayed(runnable, 1500);
+
         } else if (v == btnStart) {
             mTvShow.setText("正在处理……");
             new Thread(new Runnable() {
@@ -212,6 +208,19 @@ public class VolumeSetingAct extends Activity implements VolumeInterface.Display
         }
     }
 
+    private int aa = 0;
+    Runnable runnable = new Runnable() {
+        @Override
+        public void run() {
+            volumeInterface.volumePreviewPicture(true);
+            Log.i("tw", "run: yanshi ");
+            handler.postDelayed(runnable, 1000);
+            if (aa > 2) {
+                handler.removeCallbacks(runnable);
+            }
+            aa++;
+        }
+    };
 
 }
 

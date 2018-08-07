@@ -29,8 +29,8 @@ import java.util.List;
  * ━━━━━━神兽出没━━━━━━
  *
  * @author :孙天伟 in  2017/9/27   13:32.
- *         联系方式:QQ:420401567
- *         功能描述:  数据库增删改查
+ * 联系方式:QQ:420401567
+ * 功能描述:  数据库增删改查
  */
 public class DBUitl {
     public DBUitl() {
@@ -78,7 +78,7 @@ public class DBUitl {
         return kuaiShouDatas;
     }
 
-   public void deleAll(){
+    public void deleAll() {
         mDao.deleteAll();
-   }
+    }
 }

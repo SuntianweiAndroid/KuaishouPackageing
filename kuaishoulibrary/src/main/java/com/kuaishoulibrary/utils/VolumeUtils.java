@@ -29,7 +29,7 @@ public class VolumeUtils {
 //        Imgproc.dilate(rgbMat,rgbMat,element);
 //        Imgproc.erode(rgbMat,rgbMat,element);
 //        Imgproc.cvtColor(rgbMat,rgbMat,Imgproc.COLOR_RGB2GRAY);
-        Imgproc.threshold(dst1.get(2), rgbMat, 5, 255, Imgproc.THRESH_TOZERO);
+        Imgproc.threshold(dst1.get(2), rgbMat, 7, 255, Imgproc.THRESH_TOZERO);
         Utils.matToBitmap(rgbMat, bg);
         return bg;
     }
@@ -65,6 +65,7 @@ public class VolumeUtils {
         Mat rgbMat = new Mat();
         Imgproc.Canny(photo2, rgbMat, 100, 250);
         Imgproc.HoughLines(rgbMat, lines, 1, Math.PI / 180, 40);
+
         double[][] p = new double[lines.rows()][2];
         for (int i = 0; i < lines.rows(); i++) {
             data = lines.get(i, 0);
@@ -235,10 +236,10 @@ public class VolumeUtils {
             double[] points2 = new double[]{p2.x, p2.y};
             double[] points3 = new double[]{p3.x, p3.y};
             double[] points4 = new double[]{p4.x, p4.y};
-            if (min(p1.x, p2.x, p3.x, p4.x) < -100 || max(p1.x, p2.x, p3.x, p4.x) > b + 100) {
+            if (min(p1.x, p2.x, p3.x, p4.x) < -10 || max(p1.x, p2.x, p3.x, p4.x) > b + 10) {
                 V[3] = 3;
                 return V;
-            } else if (min(p1.y, p2.y, p3.y, p4.y) < -100 || max(p1.y, p2.y, p3.y, p4.y) > c + 100) {
+            } else if (min(p1.y, p2.y, p3.y, p4.y) < -10 || max(p1.y, p2.y, p3.y, p4.y) > c + 10) {
                 V[3] = 4;
                 return V;
             }
@@ -316,8 +317,8 @@ public class VolumeUtils {
         int h = L.getHeight();
         int m;
         int n;
-        int th = 30;//点的个数
-        int can = 15;//范围
+        int th = 40;//点的个数
+        int can = 10;//范围
         if (b > 0.70711) {
             for (int x = 20; x <= w - 20; x += 3) {
                 int y = (int) Math.round((p - a * x) / b);

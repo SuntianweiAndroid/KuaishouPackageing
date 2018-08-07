@@ -34,9 +34,8 @@ dependencies {
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
     implementation 'org.greenrobot:greendao:3.2.2'
-
+    //json解析b  霍尼激活重要包
     implementation 'win.reginer:RHttp:1.1'
-    //json解析b
-    implementation 'com.google.code.gson:gson:2.8.2'
+    implementation 'com.google.code.gson:gson:2.8.4'
     implementation project(':kuaishoulibrary')
 }

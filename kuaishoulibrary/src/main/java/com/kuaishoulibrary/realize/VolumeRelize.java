@@ -25,12 +25,14 @@ import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
+import org.opencv.core.Core;
 import org.opencv.core.Mat;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class VolumeRelize implements VolumeInterface, Camera.PreviewCallback, SurfaceHolder.Callback, Camera.PictureCallback {
     private SharedPreferencesUitl preferencesUitl;
@@ -122,6 +124,7 @@ public class VolumeRelize implements VolumeInterface, Camera.PreviewCallback, Su
     private Bitmap backMap = null;
     private boolean isJiaozheng = false;
     private boolean isRunning = false;
+    private int myCallBack = 0;
 
     public void previewPicture(boolean isBeiJing) {
         isBeijing = isBeiJing;
@@ -144,6 +147,7 @@ public class VolumeRelize implements VolumeInterface, Camera.PreviewCallback, Su
         // TODO: 2018/4/10   计算体积
         Camera.Size previewSize = camera.getParameters().getPreviewSize();//获取尺寸,格式转换的时候要用到
         EventBus.getDefault().post(new CameraEntity(bytes, previewSize.height, previewSize.width));
+        Log.i(TAG, "onPreviewFrame: ");
     }
 
     public void initCamera() {
@@ -189,7 +193,7 @@ public class VolumeRelize implements VolumeInterface, Camera.PreviewCallback, Su
     }
 
     public double[] V = new double[]{0, 0, 0, 5};
-
+    List<Bitmap> bitmapList = new ArrayList<>();
     @Subscribe(threadMode = ThreadMode.ASYNC)
     public void encodeData(CameraEntity entity) {
         // TODO: 2018/3/27   算法 /zhuanbitmap
@@ -198,24 +202,53 @@ public class VolumeRelize implements VolumeInterface, Camera.PreviewCallback, Su
         YuvImage yuvimage = new YuvImage(entity.getYuvData(), ImageFormat.NV21, entity.getWidth(), entity.getHeight(), null);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         //2.5毫米镜头
-        yuvimage.compressToJpeg(new android.graphics.Rect(500, 310, 1200, 900), 95, baos);// 80--JPG图片的质量[0-100],100最高
+
+//        yuvimage.compressToJpeg(new android.graphics.Rect(540, 260, 1260, 860), 85, baos);// 85--JPG图片的质量[0-100],100最高
+//        yuvimage.compressToJpeg(new android.graphics.Rect(500, 310, 1200, 900), 95, baos);// 老参数
+        yuvimage.compressToJpeg(new android.graphics.Rect(500, 310, 1200, 1100), 95, baos);// 老参数
 //        yuvimage.compressToJpeg(new android.graphics.Rect(150, 100, 1500, 1100), 95, baos);// 80--JPG图片的质量[0-100],100最高
         Bitmap bitmap = BitmapFactory.decodeByteArray(baos.toByteArray(), 0, baos.toByteArray().length);
         Log.i("tw", "拍照时间" + (System.currentTimeMillis() - a));
         bitmap = VolumeUtils.grayMap(bitmap);
         if (isBeijing) {
             backMap = bitmap;
-            displayVolumeListener.getVolumeDatas(new double[]{0, 0, 0, 5}, backMap);
-            try {
-                if (BitmapUtil.saveFile(bitmap, "beijing", 100)) {
-                    // TODO: 2018/3/9   成功
+            bitmapList.add(bitmap);
+            Log.i(TAG, "三次处理: ");
+            if (bitmapList.size() == 3) {
+                Log.i(TAG, "三次处理: ==3");
+                // TODO: 2018/7/10   三次背景处理
+                Mat mat1 = new Mat();
+                Mat mat2 = new Mat();
+                Utils.bitmapToMat(bitmapList.get(0),mat1);
+                Utils.bitmapToMat(bitmapList.get(1),mat2);
+                Core.bitwise_or(mat1,mat2,mat1);
+                Utils.bitmapToMat(bitmapList.get(2),mat2);
+                Core.bitwise_or(mat2,mat1,mat2);
+                Utils.matToBitmap(mat2,bitmap);
+                mat1.release();
+                mat2.release();
+                bitmapList.clear();
+                displayVolumeListener.getVolumeDatas(new double[]{0, 0, 0, 5}, backMap);
+                try {
+                    if (BitmapUtil.saveFile(bitmap, "beijing", 100)) {
+                        // TODO: 2018/3/9   成功
+                        bitmap.recycle();
 //                    Toast.makeText(context, "拍照背景成功", Toast.LENGTH_SHORT).show();
-                } else {
-                    // TODO: 2018/3/9   失败
+                    } else {
+                        // TODO: 2018/3/9   失败
 //                    Toast.makeText(context, "失败", Toast.LENGTH_SHORT).show();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
+            } else if (bitmapList.size()>3){
+                Log.i(TAG, "三次处理》3: ");
+                bitmapList.clear();
+                displayVolumeListener.getVolumeDatas(new double[]{0, 0, 0, 6}, backMap);
+
+            }else {
+                Log.i(TAG, "三次处理:《3 ");
+//                displayVolumeListener.getVolumeDatas(new double[]{0, 0, 0, 6}, backMap);
             }
         } else {
             if (backMap != null) {
