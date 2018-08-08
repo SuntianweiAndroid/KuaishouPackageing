@@ -108,9 +108,6 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
     private VolumeInterface volumeInterface;
     //    private HuoniScan huoniScan;
     private HSMDecoder hsmDecoder;
-    private ActivationManager activationManager;
-    private com.honeywell.camera.CameraManager cameraManager;
-    private boolean[] bl = new boolean[48];
     private DeviceControl deviceControl;
     /**
      * 条码设置
@@ -168,19 +165,22 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
         dbUitl = new DBUitl();//初始化数据库util
         preferencesUitl = SharedPreferencesUitl.getInstance(this, "decoeBar");
         df = new DecimalFormat("######0.00");
+
         //初始化霍尼扫描解码
-        hsmDecoder = HSMDecoder.getInstance(MainActivity.this);
-        hsmDecoder.addResultListener(MainActivity.this);
-        activationManager = new ActivationManager(MainActivity.this);
-        activationManager.activate();//链接后台请求激活扫描库
-        cameraManager = CameraManager.getInstance(this);
+        new ActivationManager(this).activate();
+        hsmDecoder = HSMDecoder.getInstance(this);
 //        hsmDecoder.setActiveCamera(ActiveCamera.FRONT_FACING);//前置 摄像头
-//        huoniScan = HuoniManage.getKuaishouIntance();
-//        huoniScan.intScanDecode(MainActivity.this);
-//        huoniScan.setdisplayBarcodeData(this);
-//        huoniScan.setHuoniScanLibraryState(this);
-//        hsmDecoder = huoniScan.getHuoniHsmDecoder();
-//        cameraManager = huoniScan.getHuoniCameraManager(MainActivity.this);
+//        hsmDecoder.enableSymbology(Symbology.QR);
+        Camera camera1 = CameraManager.getInstance(this).getCamera();
+        Camera.Parameters parameters1 = camera1.getParameters();
+        parameters1.setExposureCompensation(-3);
+        parameters1.setAutoWhiteBalanceLock(true);
+        parameters1.setColorEffect(Camera.Parameters.EFFECT_MONO);
+        parameters1.setPreviewSize(1920, 1080);
+        camera1.setParameters(parameters1);
+        hsmDecoder.enableSound(true);
+        hsmDecoder.addResultListener(this);
+
         //初始化提及测量
 //        volumeInterface = VolumeManage.getVolumeIntance();
 
@@ -221,133 +221,120 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
             Log.i("BarCodeQueue", "onResume: " + anOo);
         }
         starterTimer();//检测所有状态
-        hsmDecoder.enableSymbology(Symbology.CODE128);
-        hsmDecoder.enableSymbology(Symbology.CODE39);
-        hsmDecoder.enableSound(false);
-
-        cameraManager.reopenCamera();
-        startTime = SystemClock.currentThreadTimeMillis();
-        camera1 = cameraManager.getCamera();
-        parameters1 = camera1.getParameters();
-        parameters1.setExposureCompensation(-3);
-//        parameters1.setAutoWhiteBalanceLock(true);
-        parameters1.setColorEffect(Camera.Parameters.EFFECT_MONO);
-        parameters1.setPreviewSize(1920, 1080);
-        camera1.setParameters(parameters1);
 //        setCameraParams();
 //        startTimer();
         super.onResume();
 
     }
 
-    @SuppressWarnings("unchecked")
-    private void setCameraParams() {
-        Camera.Parameters parameters = cameraManager.getCamera().getParameters();
-        try {
-            //获取支持的参数
-            Method parametersSetEdgeMode = Camera.Parameters.class
-                    .getMethod("setEdgeMode", String.class);
-            Method parametersSetBrightnessMode = Camera.Parameters.class
-                    .getMethod("setBrightnessMode", String.class);
-            Method parametersSetContrastMode = Camera.Parameters.class
-                    .getMethod("setContrastMode", String.class);
+//    @SuppressWarnings("unchecked")
+//    private void setCameraParams() {
+//        Camera.Parameters parameters = cameraManager.getCamera().getParameters();
+//        try {
+//            //获取支持的参数
+//            Method parametersSetEdgeMode = Camera.Parameters.class
+//                    .getMethod("setEdgeMode", String.class);
+//            Method parametersSetBrightnessMode = Camera.Parameters.class
+//                    .getMethod("setBrightnessMode", String.class);
+//            Method parametersSetContrastMode = Camera.Parameters.class
+//                    .getMethod("setContrastMode", String.class);
+//
+//            //锐度 亮度 对比度
+//            parametersSetEdgeMode.invoke(parameters, "high");
+//            parametersSetBrightnessMode.invoke(parameters, "high");
+//            parametersSetContrastMode.invoke(parameters, "high");
+//            Method parametersGetEdgeMode = Camera.Parameters.class
+//                    .getMethod("getEdgeMode");
+//            Method parametersGetBrightnessMode = Camera.Parameters.class
+//                    .getMethod("getBrightnessMode");
+//            Method parametersGetContrastMode = Camera.Parameters.class
+//                    .getMethod("getContrastMode");
+//
+//            //锐度亮度对比度 是否设置成功
+//            String ruidu = (String) parametersGetEdgeMode.invoke(parameters);
+//            String liangdu = (String) parametersGetBrightnessMode.invoke(parameters);
+//            String duibidu = (String) parametersGetContrastMode.invoke(parameters);
+//
+//            Log.d("cameraSetting", "mlist is" + ruidu + "-----" + liangdu + "-----" + duibidu);
+//
+//
+//        } catch (Exception e) {
+//            Log.d("cameraSetting", "error is::" + Log.getStackTraceString(e));
+//        }
+//
+//    }
 
-            //锐度 亮度 对比度
-            parametersSetEdgeMode.invoke(parameters, "high");
-            parametersSetBrightnessMode.invoke(parameters, "high");
-            parametersSetContrastMode.invoke(parameters, "high");
-            Method parametersGetEdgeMode = Camera.Parameters.class
-                    .getMethod("getEdgeMode");
-            Method parametersGetBrightnessMode = Camera.Parameters.class
-                    .getMethod("getBrightnessMode");
-            Method parametersGetContrastMode = Camera.Parameters.class
-                    .getMethod("getContrastMode");
-
-            //锐度亮度对比度 是否设置成功
-            String ruidu = (String) parametersGetEdgeMode.invoke(parameters);
-            String liangdu = (String) parametersGetBrightnessMode.invoke(parameters);
-            String duibidu = (String) parametersGetContrastMode.invoke(parameters);
-
-            Log.d("cameraSetting", "mlist is" + ruidu + "-----" + liangdu + "-----" + duibidu);
-
-
-        } catch (Exception e) {
-            Log.d("cameraSetting", "error is::" + Log.getStackTraceString(e));
-        }
-
-    }
-
-    private void startTimer() {
-        timer = new Timer();
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                parameters1.setAutoExposureLock(true);
-                if (camera1 != null)
-                    camera1.setParameters(parameters1);
-            }
-        }, 4000);
-    }
+//    private void startTimer() {
+//        timer = new Timer();
+//        timer.schedule(new TimerTask() {
+//            @Override
+//            public void run() {
+//                parameters1.setAutoExposureLock(true);
+//                if (camera1 != null)
+//                    camera1.setParameters(parameters1);
+//            }
+//        }, 4000);
+//    }
 
     private int a = 0;
 
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN || keyCode == KeyEvent.KEYCODE_F3) {
-            //处理体积
-            volumeInterface.volumePreviewPicture(false);
-            return true;
-        }
-        if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN || keyCode == KeyEvent.KEYCODE_VOLUME_UP) {//调整扫码焦距
-
-            final Gson gson = new GsonBuilder().serializeNulls().create();
-            String postData = gson.toJson(new OperBody("1254783678", "456464646", 78.00, 12.00, 45.50, 23.23, 45.23, SystemClock.currentThreadTimeMillis()));
-            String rusultData = gson.toJson(new ScanDatas(1, postData));
-            tcpIpUtils.Send(rusultData);
-            if (a > 10) {
-                a = 0;
-            }
-            switch (a) {
-                case 0:
-                    parameters1.setZoom(0);
-                    break;
-                case 1:
-                    parameters1.setZoom(1);
-                    break;
-                case 2:
-                    parameters1.setZoom(2);
-                    break;
-                case 3:
-                    parameters1.setZoom(3);
-                    break;
-                case 4:
-                    parameters1.setZoom(4);
-                    break;
-                case 5:
-                    parameters1.setZoom(5);
-                    break;
-                case 6:
-                    parameters1.setZoom(6);
-                    break;
-                case 7:
-                    parameters1.setZoom(7);
-                    break;
-                case 8:
-                    parameters1.setZoom(8);
-                    break;
-                case 9:
-                    parameters1.setZoom(9);
-                    break;
-                case 10:
-                    parameters1.setZoom(10);
-                    break;
-            }
-            camera1.setParameters(parameters1);
-            a++;
-            return true;
-        }
-        return super.onKeyDown(keyCode, event);
-    }
+//    @Override
+//    public boolean onKeyDown(int keyCode, KeyEvent event) {
+//        if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN || keyCode == KeyEvent.KEYCODE_F3) {
+//            //处理体积
+//            volumeInterface.volumePreviewPicture(false);
+//            return true;
+//        }
+//        if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN || keyCode == KeyEvent.KEYCODE_VOLUME_UP) {//调整扫码焦距
+//
+//            final Gson gson = new GsonBuilder().serializeNulls().create();
+//            String postData = gson.toJson(new OperBody("1254783678", "456464646", 78.00, 12.00, 45.50, 23.23, 45.23, SystemClock.currentThreadTimeMillis()));
+//            String rusultData = gson.toJson(new ScanDatas(1, postData));
+//            tcpIpUtils.Send(rusultData);
+//            if (a > 10) {
+//                a = 0;
+//            }
+//            switch (a) {
+//                case 0:
+//                    parameters1.setZoom(0);
+//                    break;
+//                case 1:
+//                    parameters1.setZoom(1);
+//                    break;
+//                case 2:
+//                    parameters1.setZoom(2);
+//                    break;
+//                case 3:
+//                    parameters1.setZoom(3);
+//                    break;
+//                case 4:
+//                    parameters1.setZoom(4);
+//                    break;
+//                case 5:
+//                    parameters1.setZoom(5);
+//                    break;
+//                case 6:
+//                    parameters1.setZoom(6);
+//                    break;
+//                case 7:
+//                    parameters1.setZoom(7);
+//                    break;
+//                case 8:
+//                    parameters1.setZoom(8);
+//                    break;
+//                case 9:
+//                    parameters1.setZoom(9);
+//                    break;
+//                case 10:
+//                    parameters1.setZoom(10);
+//                    break;
+//            }
+//            camera1.setParameters(parameters1);
+//            a++;
+//            return true;
+//        }
+//        return super.onKeyDown(keyCode, event);
+//    }
 
 
     @Override
@@ -623,6 +610,12 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
 //        preferencesUitl.write("hsmDecoder", s);
 //        customToolBar.setCameraState("相机：" + s);
 //    }
+
+    /**
+     * 激活解码返回
+     *
+     * @param event
+     */
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void showDialogMsg(DialogShowMsg event) {
         String msg = event.getMsg();
@@ -693,6 +686,8 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
 //        mTvShowmsg.setText(count+"次");
 
 //        if (isJingdDongCodes("76196584344-1-1-23")) {//京东判断条码
+
+
         String decode = "";
         if (hsmDecodeResults.length > 0) {
             HSMDecodeResult firstResult = hsmDecodeResults[0];

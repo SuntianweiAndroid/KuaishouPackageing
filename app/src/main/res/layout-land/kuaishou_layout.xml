@@ -32,7 +32,7 @@
             <com.honeywell.barcode.HSMDecodeComponent
                 android:id="@+id/hsm_decodeComponent"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"></com.honeywell.barcode.HSMDecodeComponent>
+                android:layout_height="match_parent" />
 
             <LinearLayout
                 android:layout_width="match_parent"

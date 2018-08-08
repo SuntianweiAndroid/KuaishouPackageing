@@ -4,10 +4,8 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.hardware.Camera;
 import android.os.Bundle;
 import android.os.PowerManager;
-import android.view.View;
 import android.view.WindowManager;
 
 import com.kuaishoupackaging.util.SharedPreferencesUitl;
@@ -16,8 +14,8 @@ import com.kuaishoupackaging.util.SharedPreferencesUitl;
 public class BaseAct extends Activity {
     private PowerManager.WakeLock wakeLock = null;
 //    public CameraManager cameraManager;
-    public Camera.Parameters parameters1;
-    public Camera camera1;
+//    public Camera.Parameters parameters1;
+//    public Camera camera1;
     private boolean[] bl = new boolean[48];
     public SharedPreferencesUitl preferencesUitl;
 
