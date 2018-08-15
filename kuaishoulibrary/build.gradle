@@ -51,6 +51,6 @@ dependencies {
     //    compile(name: 'openCVLibrary330-release', ext: 'aar')
     //    evenbus 传递数
     api 'org.greenrobot:eventbus:3.0.0'
-    api 'com.speedata:deivice:+'
+    api 'com.speedata:deivice:1.5.8'
 
 }

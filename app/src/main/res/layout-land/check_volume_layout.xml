@@ -19,6 +19,7 @@
             android:id="@+id/imageview_show"
             android:layout_width="380dp"
             android:layout_height="380dp" />
+
         <TextView
             android:id="@+id/tv_show"
             android:layout_width="wrap_content"
@@ -29,41 +30,43 @@
             android:shadowDx="0"
             android:shadowDy="2"
             android:shadowRadius="30"
-            android:text="请点击处理按钮"
+            android:text="@string/volume_set_btn_hint"
             android:textColor="@color/white"
             android:textSize="40sp"
             android:textStyle="bold" />
 
         <Button
+            android:id="@+id/btn_background"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/btn_background"
-            android:layout_marginLeft="100dp"
-            android:background="@drawable/btn_style"
             android:layout_gravity="bottom"
             android:layout_marginBottom="10dp"
-            android:textSize="60sp"
-            android:text="拍照背景"/>
+            android:layout_marginLeft="100dp"
+            android:background="@drawable/btn_style"
+            android:text="@string/volume_set_btn_beijing"
+            android:textSize="60sp" />
+
         <Button
+            android:id="@+id/btn_start"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="校正处理"
-            android:background="@drawable/btn_style"
-            android:textSize="60sp"
             android:layout_gravity="bottom"
             android:layout_marginBottom="10dp"
             android:layout_marginLeft="400dp"
-            android:id="@+id/btn_start"/>
+            android:background="@drawable/btn_style"
+            android:text="@string/volume_set_btn_jiaozheng"
+            android:textSize="60sp" />
+
         <Button
+            android:id="@+id/btn_nihe"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="校正完成"
-            android:background="@drawable/btn_style"
-            android:textSize="60sp"
             android:layout_gravity="bottom"
             android:layout_marginBottom="10dp"
             android:layout_marginLeft="700dp"
-            android:id="@+id/btn_nihe"/>
+            android:background="@drawable/btn_style"
+            android:text="@string/volume_set_btn_wancheng"
+            android:textSize="60sp" />
 
     </FrameLayout>
 

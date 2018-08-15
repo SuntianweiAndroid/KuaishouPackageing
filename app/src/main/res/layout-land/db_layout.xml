@@ -13,7 +13,7 @@
         android:id="@+id/btn_clear"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="删除所有数据" />
+        android:text="@string/db_btn_delete" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -42,7 +42,7 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:gravity="center"
-                android:text="条码"
+                android:text="@string/db_batcode"
                 android:textSize="20sp" />
 
             <View
@@ -55,7 +55,7 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:gravity="center"
-                android:text="重量"
+                android:text="@string/db_weight"
                 android:textSize="20sp" />
 
             <View
@@ -68,7 +68,7 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:gravity="center"
-                android:text="体积"
+                android:text="@string/db_volume"
                 android:textSize="20sp" />
 
             <View
@@ -81,7 +81,7 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:gravity="center"
-                android:text="扫描时间"
+                android:text="@string/db_scan_time"
                 android:textSize="20sp" />
 
             <View

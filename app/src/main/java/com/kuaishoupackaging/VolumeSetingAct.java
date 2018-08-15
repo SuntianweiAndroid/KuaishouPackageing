@@ -125,23 +125,23 @@ public class VolumeSetingAct extends Activity implements VolumeInterface.Display
                     double[] V = (double[]) msg.obj;
                     if (V[3] == 0) {
                         if (count > 5) {
-                            mTvShow.setText("5次校正已完成，请点击校正完成按钮！");
+                            mTvShow.setText(R.string.volume_set_hint_true);
                         } else {
                             Testdata.add(new Datas(V[0], V[1], V[2]));
-                            mTvShow.setText("第" + count + "次处理成功，请换下一个标准体！");
+                            mTvShow.setText(count + R.string.volume_set_hint_chenggong);
                             Log.i("stw", "handleMessage: chenggklsjdgklsdajdklfhasldkhfklsd" + V[0] + "！！！" + V[1] + "!!!" + V[2]);
-                            Toast.makeText(VolumeSetingAct.this, "成功", Toast.LENGTH_SHORT).show();
+//                            Toast.makeText(VolumeSetingAct.this, "成功", Toast.LENGTH_SHORT).show();
                         }
                         count++;
                     } else if (V[3] == 5) {
-                        mTvShow.setText("背景拍摄成功！");
+                        mTvShow.setText(R.string.volume_set_hint_beijing_true);
                     } else if (V[3] == 6) {
-                        mTvShow.setText("背景拍摄失败！");
+                        mTvShow.setText(R.string.volume_set_hint_beijing_false);
                     } else {
                         if (count > 5) {
-                            mTvShow.setText("5次校正已完成，请点击校正完成按钮！");
+                            mTvShow.setText(R.string.volume_set_hint_true);
                         } else {
-                            mTvShow.setText("第" + count + "次处理失败，请重新处理！");
+                            mTvShow.setText(count + R.string.volume_set_hint_shibai);
                         }
                     }
                     break;
@@ -149,20 +149,19 @@ public class VolumeSetingAct extends Activity implements VolumeInterface.Display
                     imageviewShow.setImageBitmap((Bitmap) msg.obj);
                     break;
                 case 3:
-                    mTvShow.setText("校验成功！");
                     Testdata.clear();
                     count = 1;
                     VolumeSetingAct.this.finish();
                     break;
                 case 4:
-                    mTvShow.setText("校验失败，请重新进行校正操作！");
+                    mTvShow.setText(R.string.volume_set_hint_jiaoyanfale);
                     Testdata.clear();
                     count = 1;
                     break;
                 case 5:
                     count = 1;
                     Testdata.clear();
-                    mTvShow.setText("校正失败，请重新进行校正操作！");
+                    mTvShow.setText(R.string.volume_set_hint_jiaoyanfale);
                     break;
             }
         }
@@ -172,7 +171,7 @@ public class VolumeSetingAct extends Activity implements VolumeInterface.Display
     @Override
     public void onClick(View v) {
         if (v == btnBackground) {
-            mTvShow.setText("正在处理……");
+            mTvShow.setText(R.string.volume_set_hint_loading);
 //                new Thread(new Runnable() {
 //                    @Override
 //                    public void run() {
@@ -189,7 +188,7 @@ public class VolumeSetingAct extends Activity implements VolumeInterface.Display
             handler.postDelayed(runnable, 1500);
 
         } else if (v == btnStart) {
-            mTvShow.setText("正在处理……");
+            mTvShow.setText(R.string.volume_set_hint_loading);
             new Thread(new Runnable() {
                 @Override
                 public void run() {

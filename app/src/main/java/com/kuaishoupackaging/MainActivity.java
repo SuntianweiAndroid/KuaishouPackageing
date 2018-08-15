@@ -125,12 +125,12 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.kuaishou_layout);
         initView();
         initLibrary();
     }
 
     private void initView() {
+        setContentView(R.layout.kuaishou_layout);
         mTvsocketerromsg = findViewById(R.id.tv_socket_erro);
         customToolBar = findViewById(R.id.title_bar_layout);
         mVolueLayout = findViewById(R.id.volume_layout);
@@ -167,10 +167,10 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
         df = new DecimalFormat("######0.00");
 
         //初始化霍尼扫描解码
-        new ActivationManager(this).activate();
         hsmDecoder = HSMDecoder.getInstance(this);
-//        hsmDecoder.setActiveCamera(ActiveCamera.FRONT_FACING);//前置 摄像头
-//        hsmDecoder.enableSymbology(Symbology.QR);
+        //库激活调用
+        new ActivationManager(this).activate();
+        //获取库camera设置相关参数
         Camera camera1 = CameraManager.getInstance(this).getCamera();
         Camera.Parameters parameters1 = camera1.getParameters();
         parameters1.setExposureCompensation(-3);
@@ -178,17 +178,24 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
         parameters1.setColorEffect(Camera.Parameters.EFFECT_MONO);
         parameters1.setPreviewSize(1920, 1080);
         camera1.setParameters(parameters1);
-        hsmDecoder.enableSound(true);
-        hsmDecoder.addResultListener(this);
-
+        hsmDecoder.enableSound(false);//屏蔽库解码声音
+        hsmDecoder.addResultListener(this);//条码返回监听
+        CameraManager.getInstance(this).reopenCamera();
         //初始化提及测量
 //        volumeInterface = VolumeManage.getVolumeIntance();
 
         //初始化称重
         weightInterface = WeightManage.getKuaishouIntance();
         weightInterface.setWeightStatas(this);
+        handler.postDelayed(runnable, 500);
     }
 
+    Runnable runnable = new Runnable() {
+        @Override
+        public void run() {
+            initView();
+        }
+    };
     private long startTime = 0;
 
     @SuppressLint("HardwareIds")
@@ -213,7 +220,7 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
         weightInterface.initWeight();
 //        customToolBar.setCameraState("相机：" + preferencesUitl.read("hsmDecoder", ""));
         barcode = "";
-        mTvShowmsg.setText("保证条码在预览框内");
+        mTvShowmsg.setText(R.string.layout_hint);
         //查询缓存的快件条码
         BarCodeQueue = preferencesUitl.readQueue("queue");
         Object[] oo = BarCodeQueue.toArray();
@@ -264,17 +271,21 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
 //
 //    }
 
-//    private void startTimer() {
-//        timer = new Timer();
-//        timer.schedule(new TimerTask() {
-//            @Override
-//            public void run() {
+    private void startTimer() {
+        timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+//                MainActivity.this.onStop();
+//                MainActivity.this.onStart();
+//                Toast.makeText(MainActivity.this, "切換", Toast.LENGTH_SHORT).show();
+//                setContentView(R.layout.kuaishou_layout);
 //                parameters1.setAutoExposureLock(true);
 //                if (camera1 != null)
 //                    camera1.setParameters(parameters1);
-//            }
-//        }, 4000);
-//    }
+            }
+        }, 2000);
+    }
 
     private int a = 0;
 
@@ -384,7 +395,7 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
                     volumeDatas = (double[]) msg.obj;
                     if (volumeDatas[3] == 0) {
                         volumeInterface.stopVolume();
-                        mVolume.setText("长" + df.format(volumeDatas[0]) + "宽" + df.format(volumeDatas[1]) + "高" + df.format(volumeDatas[2]));
+                        mVolume.setText(R.string.db_weight + df.format(volumeDatas[0]) + "宽" + df.format(volumeDatas[1]) + "高" + df.format(volumeDatas[2]));
                         mVolueLayout.setBackgroundColor(getResources().getColor(R.color.green));
                         volumeState = true;
                     } else if (volumeDatas[3] == 1) {
@@ -405,7 +416,7 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
                         if (StateCode == 200) {
                             PlaySound.play(PlaySound.PASS_SCAN, PlaySound.NO_CYCLE);
                             mTvShowmsg.setTextColor(getResources().getColor(R.color.green));
-                            mTvShowmsg.setText("PASS\n请扫面下一件物品");
+                            mTvShowmsg.setText(R.string.layout_hint_pass);
                         }
                     } catch (JSONException e) {
                         e.printStackTrace();
@@ -422,23 +433,23 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
 
                     break;
                 case 10:// 条码/重量/体积 三合一 测量完毕上传数据
-                    dbUitl.insertDtata(new KuaiShouDatas((String) msg.obj, weightResult + "kg", "长" + 10 + "宽" + 10 + "高" + 10, testTime(System.currentTimeMillis())));
+                    dbUitl.insertDtata(new KuaiShouDatas((String) msg.obj, weightResult + "kg", String.valueOf(R.string.volume_l) + 10 + String.valueOf(R.string.volume_w) + 10 + String.valueOf(R.string.volume_h) + 10, testTime(System.currentTimeMillis())));
 //                    dbUitl.insertDtata(new KuaiShouDatas((String) msg.obj, weightResult + "kg", "长" + volumeDatas[0] + "宽" + volumeDatas[1] + "高" + volumeDatas[2], testTime(System.currentTimeMillis())));
 //                    final Gson gson = new GsonBuilder().serializeNulls().create();
 //                    String postData = gson.toJson(new OperBody(barcode, imei, Double.valueOf(weightResult), Double.parseDouble(df.format(volumeDatas[0])), Double.parseDouble(df.format(volumeDatas[1])), Double.parseDouble(df.format(volumeDatas[2])), Double.parseDouble(df.format(Double.parseDouble(df.format(volumeDatas[0])) * Double.parseDouble(df.format(volumeDatas[1])) * Double.parseDouble(df.format(volumeDatas[2])))), SystemClock.currentThreadTimeMillis()));
 //                    String rusultData = gson.toJson(new ScanDatas(1, postData));
 //                    tcpIpUtils.Send(rusultData);
                     mTvShowmsg.setTextColor(getResources().getColor(R.color.green));
-                    mTvShowmsg.setText("PASS\n请扫面下一件物品");
+                    mTvShowmsg.setText(R.string.layout_hint_pass);
                     dbCount++;
-                    customToolBar.setCount("本次保存：" + dbCount);
+                    customToolBar.setCount(String.valueOf(R.string.title_save) + dbCount);
                     break;
                 case 11:  //重复扫描条码 或电子秤断开或者秤波动
                     mLayoutWeight.setBackgroundColor(getResources().getColor(R.color.red));
                     mTvShowmsg.setTextColor(getResources().getColor(R.color.white));
-                    mTvShowmsg.setText((String) msg.obj);
+                    mTvShowmsg.setText(R.string.layout_hint);
                     volumeState = false;
-                    mVolume.setText("空");
+                    mVolume.setText(R.string.layout_hint_barcode);
 //                    mCode.setText("空");
 //                    mLayoutBarcode.setBackgroundColor(getResources().getColor(R.color.red));
                     mVolueLayout.setBackgroundColor(getResources().getColor(R.color.red));
@@ -497,19 +508,18 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
                 switch (i) {
                     case 0:
                         mWeight.setText("0.00KG");
-                        customToolBar.setWeightState("电子秤：断开");
-                        handler.sendMessage(handler.obtainMessage(11, "保证条码在预览框内"));
-                        Toast.makeText(MainActivity.this, "请检查电子秤链接", Toast.LENGTH_LONG).show();
+                        customToolBar.setWeightState(String.valueOf(R.string.title_weight_state_false));
+                        handler.sendMessage(handler.obtainMessage(11));
                         break;
                     case 1:
-                        customToolBar.setWeightState("电子秤：已连接");
+                        customToolBar.setWeightState(String.valueOf(R.string.title_weight_state_true));
                         mLayoutWeight.setBackgroundColor(getResources().getColor(R.color.green));
                         weightResult = df.format(v);
                         mWeight.setText(df.format(v) + "KG");
                         weightState = true;
                         break;
                     case 2:
-                        customToolBar.setWeightState("电子秤：已连接");
+                        customToolBar.setWeightState(String.valueOf(R.string.title_weight_state_true));
                         mWeight.setText(df.format(v) + "KG");
                         if (v == 0) {
 //                            volumeInterface.stopVolume();
@@ -522,12 +532,11 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
 //                                volumeInterface.volumePreviewPicture(false);
 //                            }
                         }
-                        handler.sendMessage(handler.obtainMessage(11, "保证条码在预览框内"));
+                        handler.sendMessage(handler.obtainMessage(11));
                         break;
                     case 3:
-//                        handler.sendMessage(handler.obtainMessage(11, "保证条码在预览框内"));
                         mWeight.setText("0.00KG");
-                        customToolBar.setWeightState("电子秤：断开");
+                        customToolBar.setWeightState(String.valueOf(R.string.title_weight_state_false));
                         break;
                 }
             }
@@ -631,7 +640,7 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
             case Global.REQUEST_ERROR://请求服务失败y
                 Logcat.d("error " + msg);
                 if (msg != null) {
-                    customToolBar.setCameraState("相机：失败");
+                    customToolBar.setCameraState(String.valueOf(R.string.title_camera_state_false));
                     Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
                 }
                 break;
@@ -642,14 +651,15 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
             case Global.REGISTER_SUCCESS://激活成功 需要初始或使能条码类型
                 hsmDecoder.enableSymbology(Symbology.CODE128);
                 hsmDecoder.enableSymbology(Symbology.CODE39);
-                customToolBar.setCameraState("相机：成功");
+//                hsmDecoder.enableSymbology(Symbology.QR);
+                customToolBar.setCameraState(String.valueOf(R.string.title_camera_state_true));
                 Logcat.d("REGISTER_SUCCESS");
                 Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
                 break;
             case Global.REGISTER_FAILED://激活失败  也需要初始或使能条码类型
-                customToolBar.setCameraState("相机：失败");
+                customToolBar.setCameraState(String.valueOf(R.string.title_camera_state_false));
                 Logcat.d("REGISTER_FAILED:" + msg);
-                Toast.makeText(this, "激活失败", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
                 break;
             default:
                 break;
@@ -686,8 +696,6 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
 //        mTvShowmsg.setText(count+"次");
 
 //        if (isJingdDongCodes("76196584344-1-1-23")) {//京东判断条码
-
-
         String decode = "";
         if (hsmDecodeResults.length > 0) {
             HSMDecodeResult firstResult = hsmDecodeResults[0];
@@ -714,7 +722,7 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
         if (BarCodeQueue.contains(decode)) {
             if (!decode.equals(barcode)) {
                 PlaySound.play(PlaySound.REPETITION, PlaySound.NO_CYCLE);
-                handler.sendMessage(handler.obtainMessage(11, "重复扫描\n请扫描下一件物品"));
+                handler.sendMessage(handler.obtainMessage(11, R.string.layout_hint_chongfu));
                 Log.i("db", "播放声音");
             }
         }

@@ -1,4 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">KuaishouAPP</string>
+    <string name="socket_erro_msg">连接已断开\n1.请检查快手设备wifi是否连接\n2.请点击右上角设置查看通讯\n服务IP端口是否正确</string>
+    <string name="title_camera_state_true">CAMERA：SUNCCESS</string>
+    <string name="title_camera_state_false">CAMERA：FAILED</string>
+    <string name="title_weight_state_false">WERGHER：DISCONNECT </string>
+    <string name="title_weight_state_true">WERGHER：CONNECT </string>
+    <string name="title_expan">EXPORT</string>
+    <string name="title_save">SAVE</string>
+    <string name="layout_hint">The bar code is in the preview box</string>
+    <string name="layout_hint_pass">PASS\nPlease sweep the next item</string>
+    <string name="layout_hint_chongfu">rescan\nPlease scan the next item</string>
+    <string name="layout_hint_barcode">NULL</string>
+    <string name="layout_barcode">BARCODE</string>
+    <string name="layout_weight">WEIGHT</string>
+    <string name="layout_volume">VOLUME</string>
+    <string name="set_service">SERVICE</string>
+    <string name="set_service_ip">SERVICE-IP</string>
+    <string name="set_service_port">SERVICE-PORT</string>
+    <string name="set_hert_time">TIME</string>
+    <string name="set_save">SAVE SETTING</string>
+    <string name="set_volume">VOlUME CHECK</string>
+    <string name="set_look_data">CHECK DATAS</string>
+    <string name="set_toast">Save Settings successful！！！</string>
+    <string name="db_weight">WEIGHT</string>
+    <string name="db_batcode">BARCODE</string>
+    <string name="db_volume">VOLUME</string>
+    <string name="db_scan_time">SCAN TIME</string>
+    <string name="db_btn_delete">DELETE DATAS</string>
+    <string name="volume_set_btn_beijing">PHOTO BACKGROUND</string>
+    <string name="volume_set_btn_jiaozheng">CHECK</string>
+    <string name="volume_set_btn_wancheng">CHECK COMPLETE</string>
+    <string name="volume_set_btn_hint">Please click the processing button</string>
+    <string name="volume_set_hint_true">5The secondary correction has been completed, please click the correction completion button！</string>
+    <string name="volume_set_hint_shibai">次处理失败，请重新处理！</string>
+    <string name="volume_set_hint_chenggong">次处理成功，请换下一个标准体！</string>
+    <string name="volume_set_hint_jiaoyanfale">Failed check. Please recheck！</string>
+    <string name="volume_set_hint_beijing_true">Successful background shooting！</string>
+    <string name="volume_set_hint_beijing_false">Failed background shooting！</string>
+    <string name="volume_set_hint_loading">processing...</string>
+    <string name="volume_l">LONG</string>
+    <string name="volume_w">WIDE</string>
+    <string name="volume_h">HIGH</string>
 </resources>

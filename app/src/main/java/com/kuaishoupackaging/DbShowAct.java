@@ -54,7 +54,7 @@ public class DbShowAct extends Activity implements View.OnClickListener, CustomT
         Button btnClear = findViewById(R.id.btn_clear);
         btnClear.setOnClickListener(this);
         initItem();
-        customToolBar.setCount("已保存：" + datas.size());
+        customToolBar.setCount(String.valueOf(R.string.title_save) + datas.size());
         preferencesUitl = SharedPreferencesUitl.getInstance(this, "decoeBar");
     }
 
@@ -74,10 +74,10 @@ public class DbShowAct extends Activity implements View.OnClickListener, CustomT
 
     private void exectExcle() {
         Map<String, String> titleMap = new LinkedHashMap<String, String>();
-        titleMap.put("barCode", "条码");
-        titleMap.put("weight", "重量");
-        titleMap.put("volume", "体积");
-        titleMap.put("times", "扫描时间");
+        titleMap.put("barCode", String.valueOf(R.string.db_batcode));
+        titleMap.put("weight", String.valueOf(R.string.db_weight));
+        titleMap.put("volume", String.valueOf(R.string.db_volume));
+        titleMap.put("times", String.valueOf(R.string.db_scan_time));
         ExcelUtil.excelExport(DbShowAct.this, datas, titleMap, "快手扫描数据");
 
     }
@@ -88,7 +88,7 @@ public class DbShowAct extends Activity implements View.OnClickListener, CustomT
         dbUitl.deleAll();
         datas = dbUitl.queryAll();
         initItem();
-        customToolBar.setCount("已保存：" + 0);
+        customToolBar.setCount(String.valueOf(R.string.title_save) + 0);
 
     }
 

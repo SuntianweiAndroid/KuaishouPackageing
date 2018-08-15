@@ -29,7 +29,7 @@
                     android:layout_marginLeft="30dp"
                     android:layout_marginTop="20dp"
                     android:drawableLeft="@drawable/service_seting"
-                    android:text="服务通讯"
+                    android:text="@string/set_service"
                     android:textSize="50sp" />
             </LinearLayout>
 
@@ -46,15 +46,15 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:layout_marginLeft="20dp"
-                android:layout_marginTop="10dp"
                 android:layout_marginRight="20dp"
+                android:layout_marginTop="10dp"
                 android:orientation="vertical">
 
                 <TextView
                     android:id="@+id/textView1"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="服务端IP"
+                    android:text="@string/set_service_ip"
                     android:textSize="30sp" />
 
                 <EditText
@@ -69,7 +69,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
-                    android:text="端口号"
+                    android:text="@string/set_service_port"
                     android:textSize="30sp" />
 
                 <EditText
@@ -77,15 +77,15 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:ems="10"
-                    android:text="8888"
                     android:inputType="number"
+                    android:text="8888"
                     android:textSize="30sp" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
-                    android:text="心跳时间"
+                    android:text="@string/set_hert_time"
                     android:textSize="30sp" />
 
                 <EditText
@@ -93,8 +93,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:ems="10"
-                    android:text="1"
                     android:inputType="number"
+                    android:text="1"
                     android:textSize="30sp" />
 
                 <Button
@@ -103,7 +103,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
                     android:background="@drawable/btn_style"
-                    android:text="保存"
+                    android:text="@string/set_save"
                     android:textSize="40sp" />
 
 
@@ -128,7 +128,7 @@
                     android:layout_marginLeft="30dp"
                     android:layout_marginTop="20dp"
                     android:drawableLeft="@drawable/volume_seting"
-                    android:text="体积校正"
+                    android:text="@string/set_volume"
                     android:textSize="50sp" />
 
             </LinearLayout>
@@ -151,10 +151,10 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_margin="20dp"
-                    android:layout_marginTop="70dp"
                     android:layout_marginBottom="70dp"
+                    android:layout_marginTop="70dp"
                     android:background="@drawable/btn_style"
-                    android:text="体积校正"
+                    android:text="@string/set_volume"
                     android:textSize="40sp" />
 
             </LinearLayout>
@@ -177,7 +177,7 @@
                     android:layout_marginLeft="30dp"
                     android:layout_marginTop="30dp"
                     android:drawableLeft="@drawable/db_set"
-                    android:text="查看数据"
+                    android:text="@string/set_look_data"
                     android:textSize="50sp" />
 
             </LinearLayout>
@@ -201,7 +201,7 @@
                     android:layout_margin="20dp"
                     android:layout_marginTop="30dp"
                     android:background="@drawable/btn_style"
-                    android:text="查看数据"
+                    android:text="@string/set_look_data"
                     android:textSize="40sp" />
             </LinearLayout>
         </LinearLayout>

@@ -51,7 +51,7 @@
                     android:shadowDx="0"
                     android:shadowDy="2"
                     android:shadowRadius="30"
-                    android:text="保证条码在预览框内"
+                    android:text="@string/layout_hint"
                     android:textColor="@color/white"
                     android:textSize="60sp"
                     android:textStyle="bold" />
@@ -94,7 +94,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:ems="1"
-                    android:text="条码"
+                    android:text="@string/layout_barcode"
                     android:textSize="50sp" />
 
                 <ScrollView
@@ -106,7 +106,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="center"
-                        android:text="空"
+                        android:text="@string/layout_hint_barcode"
                         android:textSize="40sp" />
                 </ScrollView>
             </LinearLayout>
@@ -125,7 +125,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:ems="1"
-                    android:text="重量"
+                    android:text="@string/layout_weight"
                     android:textSize="50sp" />
 
                 <TextView
@@ -142,16 +142,16 @@
                 android:layout_height="match_parent"
                 android:layout_marginTop="5dp"
                 android:layout_weight="1"
-                android:visibility="gone"
                 android:background="@color/red"
                 android:gravity="center"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:visibility="gone">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:ems="1"
-                    android:text="体积"
+                    android:text="@string/layout_volume"
                     android:textSize="50sp" />
 
                 <TextView

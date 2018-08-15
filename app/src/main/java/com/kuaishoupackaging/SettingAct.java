@@ -94,7 +94,7 @@ public class SettingAct extends Activity implements View.OnClickListener {
                 preferencesUitl.write("ip", ip);
                 preferencesUitl.write("duankou", duankou);
                 preferencesUitl.write("heart", heart);
-                Toast.makeText(this, "保存设置成功！！！", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, R.string.set_toast, Toast.LENGTH_SHORT).show();
                 break;
             case R.id.btn_volume_setting:
                 Intent intent = new Intent(this, VolumeSetingAct.class);
