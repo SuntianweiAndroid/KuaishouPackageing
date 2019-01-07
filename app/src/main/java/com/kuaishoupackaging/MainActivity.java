@@ -2,6 +2,7 @@ package com.kuaishoupackaging;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -59,6 +60,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
+import java.security.Policy;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayDeque;
@@ -121,6 +123,8 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
     private double[] volumeDatas;
     private Timer timer = null;
     private String imei;
+    private Camera camera1;
+    private Camera.Parameters parameters1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -159,41 +163,44 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
         }
     }
 
+
     private void initLibrary() {
         EventBus.getDefault().register(this);
         PlaySound.initSoundPool(this);
         dbUitl = new DBUitl();//初始化数据库util
         preferencesUitl = SharedPreferencesUitl.getInstance(this, "decoeBar");
         df = new DecimalFormat("######0.00");
-
         //初始化霍尼扫描解码
         hsmDecoder = HSMDecoder.getInstance(this);
-        //库激活调用
-        new ActivationManager(this).activate();
         //获取库camera设置相关参数
-        Camera camera1 = CameraManager.getInstance(this).getCamera();
-        Camera.Parameters parameters1 = camera1.getParameters();
+        camera1 = CameraManager.getInstance(this).getCamera();
+        parameters1 = camera1.getParameters();
         parameters1.setExposureCompensation(-3);
         parameters1.setAutoWhiteBalanceLock(true);
         parameters1.setColorEffect(Camera.Parameters.EFFECT_MONO);
         parameters1.setPreviewSize(1920, 1080);
+        hsmDecoder.enableAimer(false);
+        hsmDecoder.enableSound(true);
+        hsmDecoder.setOverlayText("");
         camera1.setParameters(parameters1);
-        hsmDecoder.enableSound(false);//屏蔽库解码声音
         hsmDecoder.addResultListener(this);//条码返回监听
-        CameraManager.getInstance(this).reopenCamera();
+//        CameraManager.getInstance(this).reopenCamera();
         //初始化提及测量
 //        volumeInterface = VolumeManage.getVolumeIntance();
-
         //初始化称重
         weightInterface = WeightManage.getKuaishouIntance();
         weightInterface.setWeightStatas(this);
         handler.postDelayed(runnable, 500);
+        hsmDecoder.enableSymbology(Symbology.CODE128);
+        hsmDecoder.enableSymbology(Symbology.CODE39);
     }
 
     Runnable runnable = new Runnable() {
         @Override
         public void run() {
             initView();
+            //库激活调用
+            new ActivationManager(MainActivity.this).activate();
         }
     };
     private long startTime = 0;
@@ -203,7 +210,7 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
     protected void onResume() {
 
 //        startSocket();
-        TelephonyManager telephonyManager = (TelephonyManager) this.getSystemService(this.TELEPHONY_SERVICE);
+        TelephonyManager telephonyManager = (TelephonyManager) this.getSystemService(TELEPHONY_SERVICE);
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
@@ -228,125 +235,25 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
             Log.i("BarCodeQueue", "onResume: " + anOo);
         }
         starterTimer();//检测所有状态
-//        setCameraParams();
-//        startTimer();
+        setCameraParams();
+        startTimer();
         super.onResume();
 
     }
 
-//    @SuppressWarnings("unchecked")
-//    private void setCameraParams() {
-//        Camera.Parameters parameters = cameraManager.getCamera().getParameters();
-//        try {
-//            //获取支持的参数
-//            Method parametersSetEdgeMode = Camera.Parameters.class
-//                    .getMethod("setEdgeMode", String.class);
-//            Method parametersSetBrightnessMode = Camera.Parameters.class
-//                    .getMethod("setBrightnessMode", String.class);
-//            Method parametersSetContrastMode = Camera.Parameters.class
-//                    .getMethod("setContrastMode", String.class);
-//
-//            //锐度 亮度 对比度
-//            parametersSetEdgeMode.invoke(parameters, "high");
-//            parametersSetBrightnessMode.invoke(parameters, "high");
-//            parametersSetContrastMode.invoke(parameters, "high");
-//            Method parametersGetEdgeMode = Camera.Parameters.class
-//                    .getMethod("getEdgeMode");
-//            Method parametersGetBrightnessMode = Camera.Parameters.class
-//                    .getMethod("getBrightnessMode");
-//            Method parametersGetContrastMode = Camera.Parameters.class
-//                    .getMethod("getContrastMode");
-//
-//            //锐度亮度对比度 是否设置成功
-//            String ruidu = (String) parametersGetEdgeMode.invoke(parameters);
-//            String liangdu = (String) parametersGetBrightnessMode.invoke(parameters);
-//            String duibidu = (String) parametersGetContrastMode.invoke(parameters);
-//
-//            Log.d("cameraSetting", "mlist is" + ruidu + "-----" + liangdu + "-----" + duibidu);
-//
-//
-//        } catch (Exception e) {
-//            Log.d("cameraSetting", "error is::" + Log.getStackTraceString(e));
-//        }
-//
-//    }
 
     private void startTimer() {
         timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-//                MainActivity.this.onStop();
-//                MainActivity.this.onStart();
-//                Toast.makeText(MainActivity.this, "切換", Toast.LENGTH_SHORT).show();
-//                setContentView(R.layout.kuaishou_layout);
-//                parameters1.setAutoExposureLock(true);
-//                if (camera1 != null)
-//                    camera1.setParameters(parameters1);
+                parameters1.setAutoExposureLock(true);
+                if (camera1 != null) {
+                    camera1.setParameters(parameters1);
+                }
             }
         }, 2000);
     }
-
-    private int a = 0;
-
-//    @Override
-//    public boolean onKeyDown(int keyCode, KeyEvent event) {
-//        if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN || keyCode == KeyEvent.KEYCODE_F3) {
-//            //处理体积
-//            volumeInterface.volumePreviewPicture(false);
-//            return true;
-//        }
-//        if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN || keyCode == KeyEvent.KEYCODE_VOLUME_UP) {//调整扫码焦距
-//
-//            final Gson gson = new GsonBuilder().serializeNulls().create();
-//            String postData = gson.toJson(new OperBody("1254783678", "456464646", 78.00, 12.00, 45.50, 23.23, 45.23, SystemClock.currentThreadTimeMillis()));
-//            String rusultData = gson.toJson(new ScanDatas(1, postData));
-//            tcpIpUtils.Send(rusultData);
-//            if (a > 10) {
-//                a = 0;
-//            }
-//            switch (a) {
-//                case 0:
-//                    parameters1.setZoom(0);
-//                    break;
-//                case 1:
-//                    parameters1.setZoom(1);
-//                    break;
-//                case 2:
-//                    parameters1.setZoom(2);
-//                    break;
-//                case 3:
-//                    parameters1.setZoom(3);
-//                    break;
-//                case 4:
-//                    parameters1.setZoom(4);
-//                    break;
-//                case 5:
-//                    parameters1.setZoom(5);
-//                    break;
-//                case 6:
-//                    parameters1.setZoom(6);
-//                    break;
-//                case 7:
-//                    parameters1.setZoom(7);
-//                    break;
-//                case 8:
-//                    parameters1.setZoom(8);
-//                    break;
-//                case 9:
-//                    parameters1.setZoom(9);
-//                    break;
-//                case 10:
-//                    parameters1.setZoom(10);
-//                    break;
-//            }
-//            camera1.setParameters(parameters1);
-//            a++;
-//            return true;
-//        }
-//        return super.onKeyDown(keyCode, event);
-//    }
-
 
     @Override
     protected void onPause() {
@@ -442,7 +349,7 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
                     mTvShowmsg.setTextColor(getResources().getColor(R.color.green));
                     mTvShowmsg.setText(R.string.layout_hint_pass);
                     dbCount++;
-                    customToolBar.setCount(String.valueOf(R.string.title_save) + dbCount);
+                    customToolBar.setCount(R.string.title_save + dbCount);
                     break;
                 case 11:  //重复扫描条码 或电子秤断开或者秤波动
                     mLayoutWeight.setBackgroundColor(getResources().getColor(R.color.red));
@@ -457,6 +364,8 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
                 case 12://实时更新条码
                     mLayoutBarcode.setBackgroundColor(getResources().getColor(R.color.green));
                     mCode.setText((String) msg.obj);
+                    break;
+                default:
                     break;
             }
         }
@@ -508,18 +417,18 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
                 switch (i) {
                     case 0:
                         mWeight.setText("0.00KG");
-                        customToolBar.setWeightState(String.valueOf(R.string.title_weight_state_false));
+                        customToolBar.setWeightState(R.string.title_weight_state_false);
                         handler.sendMessage(handler.obtainMessage(11));
                         break;
                     case 1:
-                        customToolBar.setWeightState(String.valueOf(R.string.title_weight_state_true));
+                        customToolBar.setWeightState(R.string.title_weight_state_true);
                         mLayoutWeight.setBackgroundColor(getResources().getColor(R.color.green));
                         weightResult = df.format(v);
                         mWeight.setText(df.format(v) + "KG");
                         weightState = true;
                         break;
                     case 2:
-                        customToolBar.setWeightState(String.valueOf(R.string.title_weight_state_true));
+                        customToolBar.setWeightState(R.string.title_weight_state_true);
                         mWeight.setText(df.format(v) + "KG");
                         if (v == 0) {
 //                            volumeInterface.stopVolume();
@@ -536,7 +445,9 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
                         break;
                     case 3:
                         mWeight.setText("0.00KG");
-                        customToolBar.setWeightState(String.valueOf(R.string.title_weight_state_false));
+                        customToolBar.setWeightState(R.string.title_weight_state_false);
+                        break;
+                    default:
                         break;
                 }
             }
@@ -630,8 +541,11 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
         String msg = event.getMsg();
         // 需要初始或使能条码类型
         hsmDecoder.enableAimer(false);
+        hsmDecoder.enableSound(true);
         hsmDecoder.setOverlayText("");
         hsmDecoder.setOverlayTextColor(Color.RED);
+        hsmDecoder.enableSymbology(Symbology.CODE128);
+        hsmDecoder.enableSymbology(Symbology.CODE39);
         switch (event.getTag()) {
             case Global.REQUEST_PREPARE://请求服务准备
                 Logcat.d("REQUEST_PREPARE:" + msg);
@@ -640,7 +554,7 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
             case Global.REQUEST_ERROR://请求服务失败y
                 Logcat.d("error " + msg);
                 if (msg != null) {
-                    customToolBar.setCameraState(String.valueOf(R.string.title_camera_state_false));
+//                    customToolBar.setCameraState(String.valueOf(R.string.title_camera_state_false));
                     Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
                 }
                 break;
@@ -652,12 +566,12 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
                 hsmDecoder.enableSymbology(Symbology.CODE128);
                 hsmDecoder.enableSymbology(Symbology.CODE39);
 //                hsmDecoder.enableSymbology(Symbology.QR);
-                customToolBar.setCameraState(String.valueOf(R.string.title_camera_state_true));
+                customToolBar.setCameraState(R.string.title_camera_state_true);
                 Logcat.d("REGISTER_SUCCESS");
                 Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
                 break;
             case Global.REGISTER_FAILED://激活失败  也需要初始或使能条码类型
-                customToolBar.setCameraState(String.valueOf(R.string.title_camera_state_false));
+                customToolBar.setCameraState(R.string.title_camera_state_false);
                 Logcat.d("REGISTER_FAILED:" + msg);
                 Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
                 break;
@@ -680,7 +594,7 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
     public void onHSMDecodeResult(HSMDecodeResult[] hsmDecodeResults) {
         List<BarcodeBounds> barcodeBoundsList = new ArrayList<>();
 //************************
-//        hsmDecoder.enableSound(true);
+        hsmDecoder.enableSound(true);
 //        StringBuilder result = new StringBuilder();
 //        String[] codeBytes = new String[hsmDecodeResults.length];
 //        for (int i = 0; i < hsmDecodeResults.length; i++) {
@@ -737,6 +651,42 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
 
     }
 
+    @SuppressWarnings("unchecked")
+    private void setCameraParams() {
+        try {
+            //获取支持的参数
+            Method parametersSetEdgeMode = Camera.Parameters.class
+                    .getMethod("setEdgeMode", String.class);
+            Method parametersSetBrightnessMode = Camera.Parameters.class
+                    .getMethod("setBrightnessMode", String.class);
+            Method parametersSetContrastMode = Camera.Parameters.class
+                    .getMethod("setContrastMode", String.class);
+
+            //锐度 亮度 对比度
+            parametersSetEdgeMode.invoke(parameters1, "high");
+            parametersSetBrightnessMode.invoke(parameters1, "high");
+            parametersSetContrastMode.invoke(parameters1, "high");
+            Method parametersGetEdgeMode = Camera.Parameters.class
+                    .getMethod("getEdgeMode");
+            Method parametersGetBrightnessMode = Camera.Parameters.class
+                    .getMethod("getBrightnessMode");
+            Method parametersGetContrastMode = Camera.Parameters.class
+                    .getMethod("getContrastMode");
+
+            //锐度亮度对比度 是否设置成功
+            String ruidu = (String) parametersGetEdgeMode.invoke(parameters1);
+            String liangdu = (String) parametersGetBrightnessMode.invoke(parameters1);
+            String duibidu = (String) parametersGetContrastMode.invoke(parameters1);
+
+            Log.d("cameraSetting", "mlist is" + ruidu + "-----" + liangdu + "-----" + duibidu);
+
+
+        } catch (Exception e) {
+            Log.d("cameraSetting", "error is::" + Log.getStackTraceString(e));
+        }
+
+    }
+
     private boolean IsUtf8 = false;
 
     //判断扫描的内容是否是UTF8的中文内容
@@ -749,26 +699,29 @@ public class MainActivity extends BaseAct implements WeightInterface.DisplayWeig
                         i = i + 2;
                         IsUtf8 = true;
                     } else {
-                        if (IsUtf8)
+                        if (IsUtf8) {
                             return true;
-                        else
+                        } else {
                             return false;
+                        }
                     }
                 } else if ((sx[i] >>> 4) == 0xFFFFFFE) {
                     if (((i + 2) < sx.length) && ((sx[i + 1] >>> 6) == 0x3FFFFFE) && ((sx[i + 2] >>> 6) == 0x3FFFFFE)) {
                         i = i + 3;
                         IsUtf8 = true;
                     } else {
-                        if (IsUtf8)
+                        if (IsUtf8) {
                             return true;
-                        else
+                        } else {
                             return false;
+                        }
                     }
                 } else {
-                    if (IsUtf8)
+                    if (IsUtf8) {
                         return true;
-                    else
+                    } else {
                         return false;
+                    }
                 }
             } else {
                 i++;

@@ -7,7 +7,7 @@
     <string name="title_weight_state_false">WERGHER：DISCONNECT </string>
     <string name="title_weight_state_true">WERGHER：CONNECT </string>
     <string name="title_expan">EXPORT</string>
-    <string name="title_save">SAVE</string>
+    <string name="title_save">SAVE:</string>
     <string name="layout_hint">The bar code is in the preview box</string>
     <string name="layout_hint_pass">PASS\nPlease sweep the next item</string>
     <string name="layout_hint_chongfu">rescan\nPlease scan the next item</string>

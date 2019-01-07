@@ -54,7 +54,7 @@ public class DbShowAct extends Activity implements View.OnClickListener, CustomT
         Button btnClear = findViewById(R.id.btn_clear);
         btnClear.setOnClickListener(this);
         initItem();
-        customToolBar.setCount(String.valueOf(R.string.title_save) + datas.size());
+        customToolBar.setCount(R.string.title_save + datas.size());
         preferencesUitl = SharedPreferencesUitl.getInstance(this, "decoeBar");
     }
 
@@ -88,7 +88,7 @@ public class DbShowAct extends Activity implements View.OnClickListener, CustomT
         dbUitl.deleAll();
         datas = dbUitl.queryAll();
         initItem();
-        customToolBar.setCount(String.valueOf(R.string.title_save) + 0);
+        customToolBar.setCount(R.string.title_save + 0);
 
     }
 

@@ -10,7 +10,7 @@
     <com.kuaishoupackaging.view.CustomToolBar
         android:id="@+id/title_bar_layout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"></com.kuaishoupackaging.view.CustomToolBar>
+        android:layout_height="wrap_content" />
 
 
     <LinearLayout
@@ -54,7 +54,8 @@
                     android:text="@string/layout_hint"
                     android:textColor="@color/white"
                     android:textSize="60sp"
-                    android:textStyle="bold" />
+                    android:textStyle="bold"
+                    android:visibility="gone" />
 
             </LinearLayout>
 

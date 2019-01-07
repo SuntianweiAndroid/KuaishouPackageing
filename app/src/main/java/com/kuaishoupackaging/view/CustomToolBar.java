@@ -89,15 +89,15 @@ public class CustomToolBar extends RelativeLayout implements View.OnClickListene
         }
     }
 
-    public void setCameraState(String cameraState) {
+    public void setCameraState(int cameraState) {
         tvCamera.setText(cameraState);
     }
 
-    public void setWeightState(String weightState) {
+    public void setWeightState(int weightState) {
         tvWeight.setText(weightState);
     }
 
-    public void setCount(String count) {
+    public void setCount(int count) {
         tvCount.setText(count);
     }
 

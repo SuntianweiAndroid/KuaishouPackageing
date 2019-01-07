@@ -6,7 +6,7 @@
     <string name="title_weight_state_false">电子秤：断开</string>
     <string name="title_weight_state_true">电子秤：已连接</string>
     <string name="title_expan">导出</string>
-    <string name="title_save">存储</string>
+    <string name="title_save">存储:</string>
     <string name="layout_hint">保证条码在预览框内</string>
     <string name="layout_hint_pass">PASS\n请扫面下一件物品</string>
     <string name="layout_hint_chongfu">重复扫描\n请扫描下一件物品</string>
